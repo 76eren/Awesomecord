@@ -1,0 +1,6 @@
+@Awesomecord_HostAddress = http://localhost:5272
+
+GET {{Awesomecord_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
