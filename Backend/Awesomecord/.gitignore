@@ -76,6 +76,4 @@ _[Ss]cripts
 
 .idea
 
-reactives.db
-reactives.db-shm
-reactives.db-wal
+awesomecord.db

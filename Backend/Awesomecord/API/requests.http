@@ -1,2 +1,17 @@
 ### test
 http://localhost:5041/api/v1/test
+
+
+### Create user 
+POST http://localhost:5041/api/v1/user
+Content-Type: application/json
+
+{
+  "DisplayName": "Test User",
+  "UserHandle": "testuser",
+  "Bio": "This is a test user.",
+  "FirstName": "Test",
+  "LastName": "User",
+  "Email": "testuser@example.com",
+  "Phone": "+1234567890"
+}
