@@ -12,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblyContaining<CreateUserHandler>());
 
@@ -23,6 +24,7 @@ builder.Services.AddAutoMapper(
 );
 
 var app = builder.Build();
+
 
 app.MapControllers();
 app.Run();

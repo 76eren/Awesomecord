@@ -5,8 +5,8 @@ public class User
     public string Id { get; private set; } = Guid.NewGuid().ToString();
 
     public string DisplayName { get; private set; } = default!;
-    public string UserHandle  { get; private set; } = default!;
-    public string Bio        { get; private set; }
+    public string UserHandle  { get; private set; } = default!; // This is the @username, and must be unique
+    public string Bio        { get; private set; } = default!;
 
     public string FirstName   { get; private set; } = default!;
     public string LastName    { get; private set; } = default!;
@@ -15,7 +15,7 @@ public class User
 
     private User() { }
     
-    public static User Create(string displayName, string userHandle, string? bio,
+    public static User Create(string displayName, string userHandle, string bio,
         string firstName, string lastName, string email, string phone)
     {
         return new User

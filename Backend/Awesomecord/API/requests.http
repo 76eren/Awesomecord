@@ -3,7 +3,7 @@ http://localhost:5041/api/v1/test
 
 
 ### Create user 
-POST http://localhost:5041/api/v1/user
+POST http://localhost:5041/api/v1/auth
 Content-Type: application/json
 
 {
@@ -17,4 +17,4 @@ Content-Type: application/json
 }
 
 ### Fetch user by ID
-GET http://localhost:5041/api/v1/user/0cc7f767-fcac-49fc-82ba-d462c6c34f64
+GET http://localhost:5041/api/v1/user/12d45de3-5c26-4950-b102-1ed0878456af
