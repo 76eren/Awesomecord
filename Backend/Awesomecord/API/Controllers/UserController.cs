@@ -1,6 +1,7 @@
 ﻿using API.Contracts;
 using Application.Users.Commands;
 using Application.Users.DTOs;
+using Application.Users.Queries;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +30,8 @@ public sealed class UserController(IMediator mediator, IMapper mapper) : Control
     [HttpGet("{id}")]
     public async Task<ActionResult<GetUserResponseContract>> GetById(string id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        UserDto result = await mediator.Send(new GetUserById.Query { Id = id }, cancellationToken: ct);
+        GetUserResponseContract responseContract = mapper.Map<GetUserResponseContract>(result);
+        return Ok(responseContract);
     } 
 }

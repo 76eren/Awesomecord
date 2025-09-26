@@ -77,3 +77,5 @@ _[Ss]cripts
 .idea
 
 awesomecord.db
+awesomecord.db-shm
+awesomecord.db-wal
