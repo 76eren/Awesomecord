@@ -82,7 +82,6 @@ public class AuthController : BaseApiController
         return NoContent();
     }
 
-    // Todo: make this actually restful
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<GetUserResponseContract>> Me(CancellationToken ct)

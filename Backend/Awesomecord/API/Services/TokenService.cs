@@ -23,14 +23,11 @@ public sealed class TokenService : ITokenService
 
     public string CreateAccessToken(User user)
     {
-        // Todo: this is unsafe
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Name, user.DisplayName),
-            new("handle", user.UserHandle)
+            new(ClaimTypes.NameIdentifier, user.Id)
         };
 
         var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
