@@ -79,3 +79,5 @@ _[Ss]cripts
 awesomecord.db
 awesomecord.db-shm
 awesomecord.db-wal
+
+.env

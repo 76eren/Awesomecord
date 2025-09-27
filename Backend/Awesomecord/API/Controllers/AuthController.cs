@@ -1,8 +1,15 @@
-﻿using API.Contracts;
+﻿using System.Security.Claims;
+using API.Contracts;
+using API.Contracts.Login;
+using API.Services;
 using Application.Common.Exceptions;
 using Application.Users.Commands;
 using Application.Users.DTOs;
+using Application.Users.Queries;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Persistence;
 
 namespace API.Controllers;
 
@@ -10,12 +17,101 @@ namespace API.Controllers;
 [ApiController]
 public class AuthController : BaseApiController
 {
+    private readonly ITokenService _tokenService;
+    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IOptions<JwtOptions> _jwtOptions;
+    private readonly AppDbContext _db;
+    
+    public AuthController(ITokenService tokenService,
+        IRefreshTokenService refreshTokenService,
+        IOptions<JwtOptions> jwtOptions,
+        AppDbContext db)
+    {
+        _tokenService = tokenService;
+        _refreshTokenService = refreshTokenService;
+        _jwtOptions = jwtOptions;
+        _db = db;
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<GetUserResponseContract>> Login([FromBody] LoginRequestContract requestContract, CancellationToken ct)
+    {
+        try
+        {
+            var userDto = await Mediator.Send(
+                new LoginRequest.LoginUserQuery(requestContract.HandleOrEmail, requestContract.Password), ct);
+
+            var user = await _db.Users.FindAsync(new object?[] { userDto.Id }, ct);
+            if (user is null) return Unauthorized();
+
+            var access = _tokenService.CreateAccessToken(user);
+            CookieWriter.SetAccessToken(Response, access, TimeSpan.FromMinutes(_jwtOptions.Value.AccessTokenMinutes));
+
+            var (opaque, row) = await _refreshTokenService.IssueAsync(user.Id, ct);
+            CookieWriter.SetRefreshToken(Response, opaque, row.ExpiresAtUtc);
+
+            var responseContract = Mapper.Map<GetUserResponseContract>(userDto);
+            return Ok(responseContract);
+        }
+        catch (InvalidCredentialsException)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Invalid credentials",
+                Detail = "The handle/email or password is incorrect.",
+                Status = StatusCodes.Status401Unauthorized
+            });
+        }
+    }
+    
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(CancellationToken ct)
+    {
+        if (Request.Cookies.TryGetValue("refresh_token", out var opaque) && !string.IsNullOrEmpty(opaque))
+        {
+            try
+            {
+                var (_, current) = await _refreshTokenService.ValidateAsync(opaque, ct);
+                await _refreshTokenService.RevokeAsync(current, ct);
+            }
+            catch (InvalidRefreshTokenException) {  }
+        }
+
+        CookieWriter.Clear(Response);
+        return NoContent();
+    }
+
+    // Todo: make this actually restful
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<GetUserResponseContract>> Me(CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var user = await _db.Users.FindAsync(new object?[] { userId }, ct);
+        if (user is null) return Unauthorized();
+
+        var dto = Mapper.Map<UserDto>(user);
+        var contract = Mapper.Map<GetUserResponseContract>(dto);
+        return Ok(contract);
+    }
+    
+    
     [HttpPost]
     public async Task<ActionResult<GetUserResponseContract>> Register([FromBody] CreateUserRequestContract requestContract, CancellationToken ct)
     {
         var command = new CreateUserCommand(
-            requestContract.DisplayName, requestContract.UserHandle, requestContract.Bio,
-            requestContract.FirstName, requestContract.LastName, requestContract.Email, requestContract.Phone);
+            requestContract.DisplayName, 
+            requestContract.UserHandle, 
+            requestContract.Bio,
+            requestContract.FirstName, 
+            requestContract.LastName, 
+            requestContract.Email, 
+            requestContract.Phone, 
+            requestContract.PasswordHash
+            );
 
         try
         {
@@ -32,5 +128,36 @@ public class AuthController : BaseApiController
                 Status = StatusCodes.Status409Conflict
             });
         } 
+    }
+    
+    // When 401 due to expired access call via frontend to get a new one
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(CancellationToken ct)
+    {
+        if (!Request.Cookies.TryGetValue("refresh_token", out var opaque) || string.IsNullOrEmpty(opaque))
+            return Unauthorized();
+
+        try
+        {
+            var (user, current) = await _refreshTokenService.ValidateAsync(opaque, ct);
+
+            var (newOpaque, newRow) = await _refreshTokenService.RotateAsync(current, ct);
+
+            var access = _tokenService.CreateAccessToken(user);
+            CookieWriter.SetAccessToken(Response, access, TimeSpan.FromMinutes(_jwtOptions.Value.AccessTokenMinutes));
+            CookieWriter.SetRefreshToken(Response, newOpaque, newRow.ExpiresAtUtc);
+
+            return NoContent();
+        }
+        catch (InvalidRefreshTokenException)
+        {
+            CookieWriter.Clear(Response);
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Invalid refresh token",
+                Detail = "Please login again.",
+                Status = StatusCodes.Status401Unauthorized
+            });
+        }
     }
 }

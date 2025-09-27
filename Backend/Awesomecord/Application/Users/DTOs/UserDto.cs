@@ -10,4 +10,5 @@ public class UserDto
     public string LastName { get; init; } = default!;
     public string Email { get; init; } = default!;
     public string Phone { get; init; } = default!;
+    public string PasswordHash { get; init; } = default!;
 }

@@ -5,14 +5,19 @@ using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
-
+using Microsoft.AspNetCore.Identity;
 namespace Application.Users.Commands;
 
 public sealed class CreateUserHandler(AppDbContext context, IMapper mapper)
     : IRequestHandler<CreateUserCommand, UserDto>
 {
+    private readonly PasswordHasher<User> _hasher = new ();
+    
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken ct)
     {
+        var tempUser = new User();
+        var passwordHash = _hasher.HashPassword(tempUser, request.Password);
+        
         var doesExist = await context.Users.AnyAsync(u => u.UserHandle == request.UserHandle, ct);
         if (doesExist)
         {
@@ -20,7 +25,8 @@ public sealed class CreateUserHandler(AppDbContext context, IMapper mapper)
         }
         
         var entity = User.Create(
-            request.DisplayName, request.UserHandle, request.Bio, request.FirstName, request.LastName, request.Email, request.Phone);
+            request.DisplayName, request.UserHandle, request.Bio, request.FirstName, request.LastName, request.Email, request.Phone, passwordHash
+            );
 
         context.Users.Add(entity);
         await context.SaveChangesAsync(ct);
