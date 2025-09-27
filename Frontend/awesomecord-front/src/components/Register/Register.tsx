@@ -1,16 +1,20 @@
-import "./Login.css";
+import './Register.css'
+import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
 import {useState} from "react";
 import * as React from "react";
-import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
 
-export default function Login() {
+export default function Register() {
 
     const [form, setForm] = useState(
         {
             username: "",
             password: "",
+            email: "",
+            firstName: "",
+            lastName: "",
         }
     );
+
 
     const handleChange = (e
     ) => {
@@ -41,11 +45,11 @@ export default function Login() {
             />
             <div className="w-full md:w-1/3 flex flex-col justify-center items-center min-h-screen bg-gray-800">
                 <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-md">
-                    <h2 className="text-3xl font-bold text-white">Login</h2>
+                    <h2 className="text-3xl font-bold text-white">Register account</h2>
 
-                    <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+                    <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                         <div>
-                            <label htmlFor="Username or email" className="block text-sm font-medium text-white">
+                            <label htmlFor="username" className="block text-sm font-medium text-white">
                                 Username*
                             </label>
                             <input
@@ -72,6 +76,51 @@ export default function Login() {
                                 onChange={handleChange}
                                 required
                                 autoComplete="new-password"
+                                className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-white">
+                                Email
+                            </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                value={form.email}
+                                onChange={handleChange}
+                                autoComplete="email"
+                                className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="firstName" className="block text-sm font-medium text-white">
+                                First name
+                            </label>
+                            <input
+                                id="firstName"
+                                name="firstName"
+                                type="text"
+                                value={form.firstName}
+                                onChange={handleChange}
+                                autoComplete="given-name"
+                                className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="lastName" className="block text-sm font-medium text-white">
+                                Last name
+                            </label>
+                            <input
+                                id="lastName"
+                                name="lastName"
+                                type="text"
+                                value={form.lastName}
+                                onChange={handleChange}
+                                autoComplete="family-name"
                                 className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                             />
                         </div>
