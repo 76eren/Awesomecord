@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5041/api/v1/auth";
+const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5041/api/v1/";
 
 type Options = RequestInit & { json?: unknown };
 

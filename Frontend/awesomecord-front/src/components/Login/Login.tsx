@@ -2,6 +2,10 @@ import "./Login.css";
 import {useState} from "react";
 import * as React from "react";
 import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
+import type {UserCreateModel} from "../../Models/User/userCreate.model.ts";
+import {loginUser, registerUser} from "../../services/userService.ts";
+import {toast} from "react-toastify";
+import type {UserLoginModel} from "../../Models/User/userLogin.model.ts";
 
 export default function Login() {
 
@@ -25,11 +29,25 @@ export default function Login() {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        submitRegister();
+        submitLogin();
     };
 
-    const submitRegister = () => {
-        console.log("Register payload:", form);
+    const submitLogin = async () => {
+        let loginUserModel: UserLoginModel;
+        loginUserModel = {
+            HandleOrEmail: form.username,
+            Password: form.password
+        };
+
+        try {
+            const user = await loginUser(loginUserModel);
+            toast.success("Registered user " + user.userHandle + " successfully!");
+            setTimeout(() => {
+                window.location.href = "/login";
+            }, 700);
+        } catch (error: any) {
+            toast(error.message);
+        }
     };
 
     return (
