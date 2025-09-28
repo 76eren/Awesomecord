@@ -18,10 +18,9 @@ public sealed class CreateUserHandler(AppDbContext context, IMapper mapper)
         var tempUser = new User();
         var passwordHash = _hasher.HashPassword(tempUser, request.Password);
         
-        var doesExist = await context.Users.AnyAsync(u => u.UserHandle == request.UserHandle, ct);
-        if (doesExist)
+        if (await context.Users.AnyAsync(u => u.UserHandle == request.UserHandle || u.Email == request.Email, ct))
         {
-            throw new HandleAlreadyTakenException("User handle is already taken");
+            throw new HandleAlreadyTakenException("User handle or email is already taken");
         }
         
         var entity = User.Create(
