@@ -2,16 +2,21 @@ import './Register.css'
 import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
 import {useState} from "react";
 import * as React from "react";
+import type {UserCreateModel} from "../../Models/User/userCreate.model.ts";
+import {registerUser} from "../../services/userService.ts";
+import {toast} from "react-toastify";
 
 export default function Register() {
 
     const [form, setForm] = useState(
         {
-            username: "",
+            userhandle: "",
+            displayname: "",
             password: "",
             email: "",
             firstName: "",
             lastName: "",
+            phone: "",
         }
     );
 
@@ -33,7 +38,30 @@ export default function Register() {
     };
 
     const submitRegister = () => {
-        console.log("Register payload:", form);
+        let createUserModel: UserCreateModel;
+        createUserModel = {
+            UserHandle: form.userhandle,
+            DisplayName: form.displayname,
+            Bio: "",
+            Email: form.email,
+            FirstName: form.firstName,
+            LastName: form.lastName,
+            Phone: form.phone,
+            PasswordHash: form.password
+        };
+
+        try {
+            let user = registerUser(createUserModel)
+                .then(user => {
+                    toast.success("Registered user " + user.userHandle + " successfully!");
+                })
+                .then(
+                    () => window.location.href = "/login"
+                )
+        }
+        catch (error) {
+            toast(error.message);
+        }
     };
 
     return (
@@ -49,17 +77,33 @@ export default function Register() {
 
                     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-white">
-                                Username*
+                            <label htmlFor="userhandle" className="block text-sm font-medium text-white">
+                                User handle*
                             </label>
                             <input
-                                id="username"
-                                name="username"
+                                id="userhandle"
+                                name="userhandle"
                                 type="text"
-                                value={form.username}
+                                value={form.userhandle}
                                 onChange={handleChange}
                                 required
                                 autoComplete="username"
+                                className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="displayname" className="block text-sm font-medium text-white">
+                                Display name*
+                            </label>
+                            <input
+                                id="displayname"
+                                name="displayname"
+                                type="text"
+                                value={form.displayname}
+                                onChange={handleChange}
+                                required
+                                autoComplete="displayname"
                                 className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                             />
                         </div>
@@ -82,7 +126,7 @@ export default function Register() {
 
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-white">
-                                Email
+                                Email*
                             </label>
                             <input
                                 id="email"
@@ -97,7 +141,7 @@ export default function Register() {
 
                         <div>
                             <label htmlFor="firstName" className="block text-sm font-medium text-white">
-                                First name
+                                First name*
                             </label>
                             <input
                                 id="firstName"
@@ -112,7 +156,7 @@ export default function Register() {
 
                         <div>
                             <label htmlFor="lastName" className="block text-sm font-medium text-white">
-                                Last name
+                                Last name*
                             </label>
                             <input
                                 id="lastName"
@@ -121,6 +165,21 @@ export default function Register() {
                                 value={form.lastName}
                                 onChange={handleChange}
                                 autoComplete="family-name"
+                                className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="phone" className="block text-sm font-medium text-white">
+                                Phone number
+                            </label>
+                            <input
+                                id="phone"
+                                name="phone"
+                                type="text"
+                                value={form.phone}
+                                onChange={handleChange}
+                                autoComplete="phone"
                                 className="w-full px-4 py-2 mt-2 bg-gray-700 text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                             />
                         </div>
