@@ -3,7 +3,6 @@ import type {UserCreateModel} from "../Models/User/userCreate.model.ts";
 import {apiFetch} from "./http.ts";
 import type {UserLoginModel} from "../Models/User/userLogin.model.ts";
 
-
 export async function registerUser(userCreateModel: UserCreateModel) {
     return apiFetch<UserModel>("auth", {json: userCreateModel, method: "POST"});
 }
@@ -14,4 +13,8 @@ export async function loginUser(userLoginModel: UserLoginModel) {
 
 export async function me() {
     return apiFetch<UserModel>("auth/me", {method: "GET"});
+}
+
+export async function logout() {
+    return apiFetch<void>("auth/logout", {method: "POST"});
 }

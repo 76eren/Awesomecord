@@ -98,7 +98,7 @@ export default function Login() {
                             type="submit"
                             className="w-full py-2 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 focus:ring-offset-gray-800"
                         >
-                            Create an account
+                            Submit
                         </button>
                     </form>
                 </div>

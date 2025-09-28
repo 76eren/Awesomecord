@@ -8,7 +8,7 @@ export function GuestGuard({ children }: Props) {
     const { authenticated, loading } = useAuth();
 
     if (loading) return <div>Loading...</div>;
-    if (authenticated) return <Navigate to="/home" replace />;
+    if (authenticated) return <Navigate to="/chats" replace />;
 
     return children;
 }

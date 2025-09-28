@@ -20,5 +20,22 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
         throw new Error(text || `HTTP ${res.status}`);
     }
 
-    return (await res.json()) as T;
+    if (res.status === 204 || res.status === 205) {
+        return undefined as T;
+    }
+
+    const contentLength = res.headers.get("content-length");
+    if (contentLength === "0") {
+        return undefined as T;
+    }
+
+    const contentType = res.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+        const text = await res.text();
+        if (!text) return undefined as T;
+        return JSON.parse(text) as T;
+    }
+
+    const fallbackText = await res.text().catch(() => "");
+    return (fallbackText ? (fallbackText as unknown as T) : (undefined as T));
 }
