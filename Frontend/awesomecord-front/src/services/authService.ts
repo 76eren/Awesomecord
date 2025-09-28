@@ -11,3 +11,7 @@ export async function registerUser(userCreateModel: UserCreateModel) {
 export async function loginUser(userLoginModel: UserLoginModel) {
     return apiFetch<UserModel>("auth/login", {json: userLoginModel, method: "POST"});
 }
+
+export async function me() {
+    return apiFetch<UserModel>("auth/me", {method: "GET"});
+}

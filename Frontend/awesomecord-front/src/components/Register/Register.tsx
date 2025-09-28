@@ -3,7 +3,7 @@ import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
 import {useState} from "react";
 import * as React from "react";
 import type {UserCreateModel} from "../../Models/User/userCreate.model.ts";
-import {registerUser} from "../../services/userService.ts";
+import {registerUser} from "../../services/authService.ts";
 import {toast, ToastContainer} from "react-toastify";
 
 export default function Register() {
