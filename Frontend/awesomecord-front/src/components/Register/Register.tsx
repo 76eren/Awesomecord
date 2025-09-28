@@ -4,7 +4,7 @@ import {useState} from "react";
 import * as React from "react";
 import type {UserCreateModel} from "../../Models/User/userCreate.model.ts";
 import {registerUser} from "../../services/userService.ts";
-import {toast} from "react-toastify";
+import {toast, ToastContainer} from "react-toastify";
 
 export default function Register() {
 
@@ -37,7 +37,7 @@ export default function Register() {
         submitRegister();
     };
 
-    const submitRegister = () => {
+    const submitRegister = async () => {
         let createUserModel: UserCreateModel;
         createUserModel = {
             UserHandle: form.userhandle,
@@ -51,20 +51,19 @@ export default function Register() {
         };
 
         try {
-            let user = registerUser(createUserModel)
-                .then(user => {
-                    toast.success("Registered user " + user.userHandle + " successfully!");
-                })
-                .then(
-                    () => window.location.href = "/login"
-                )
-        }
-        catch (error) {
+            const user = await registerUser(createUserModel);
+            toast.success("Registered user " + user.userHandle + " successfully!");
+            setTimeout(() => {
+                window.location.href = "/login";
+            }, 700);
+        } catch (error: any) {
             toast(error.message);
         }
     };
 
     return (
+        <>
+        <ToastContainer/>
         <div className="flex flex-col md:flex-row min-h-screen w-screen bg-gray-800">
             <div
                 className="hidden md:block md:w-2/3 bg-cover bg-center"
@@ -194,6 +193,7 @@ export default function Register() {
                 </div>
             </div>
         </div>
+        </>
     );
 
 }
