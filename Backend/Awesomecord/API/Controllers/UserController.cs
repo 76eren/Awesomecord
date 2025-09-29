@@ -6,6 +6,8 @@ using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+// Todo: might as well move this to auth controller?
+
 namespace API.Controllers;
 
 [Route("api/v1/[controller]")]

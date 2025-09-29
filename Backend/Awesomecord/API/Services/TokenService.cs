@@ -27,7 +27,8 @@ public sealed class TokenService : ITokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.NameIdentifier, user.Id)
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Name, user.UserHandle)
         };
 
         var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);

@@ -11,7 +11,12 @@ public class User
     public string Email { get; private set; } = default!;
     public string Phone { get; private set; } = default!;
     public string PasswordHash { get; set; } = default!;
-
+    
+    public List<Friendship> Friends { get; private set; } = new();
+    
+    public List<FriendRequest> SentFriendRequests { get; private set; } = new();
+    public List<FriendRequest> ReceivedFriendRequests { get; private set; } = new();
+    
     public User() { }
     
     public static User Create(
@@ -37,5 +42,4 @@ public class User
             PasswordHash = passwordHash
         };
     }
-    
 }
