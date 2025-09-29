@@ -1,12 +1,13 @@
 import './App.css'
 import {Navigate, Route, Routes} from "react-router-dom";
 import Login from "./components/Login/Login.tsx";
-import ChatsList from "./components/ChatsList/ChatsList.tsx";
+import Chats from "./components/Chats/Chats.tsx";
 import Register from "./components/Register/Register.tsx";
 import {GuestGuard} from "./guards/GuestGuard.tsx";
 import {ProtectedGuard} from "./guards/ProtectedGuard.tsx";
 import NotificationsList from "./components/Notifications/NotificationsList.tsx";
 import ServerList from "./components/ServerList/ServerList.tsx";
+import AddFriend from "./components/AddFriend/AddFriend.tsx";
 
 function App() {
     return (
@@ -43,7 +44,7 @@ function App() {
                     path="/chats"
                     element={
                         <ProtectedGuard>
-                            <ChatsList />
+                            <Chats />
                         </ProtectedGuard>
                     }
                 />
@@ -53,6 +54,15 @@ function App() {
                     element={
                         <ProtectedGuard>
                             <ServerList />
+                        </ProtectedGuard>
+                    }
+                />
+
+                <Route
+                    path="/add-friend"
+                    element={
+                        <ProtectedGuard>
+                            <AddFriend />
                         </ProtectedGuard>
                     }
                 />

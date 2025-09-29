@@ -1,4 +1,3 @@
-import './Register.css'
 import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
 import {useState} from "react";
 import * as React from "react";

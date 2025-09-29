@@ -1,4 +1,3 @@
-import './FriendsList.css'
 
 function FriendsList() {
     return (

@@ -1,7 +1,7 @@
-import './ChatsList.css'
 import Navbar from "../Navbar/Navbar.tsx";
+import ChatNavigation from "./SelectableChats/ChatNavigation/ChatNavigation.tsx";
 
-export default function ChatsList() {
+export default function Chats() {
     return (
         <div className="min-h-screen flex bg-gray-50">
             <Navbar />

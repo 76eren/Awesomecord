@@ -1,4 +1,3 @@
-import './ServersList.css'
 import Navbar from "../Navbar/Navbar.tsx";
 
 export default function ServerList() {
