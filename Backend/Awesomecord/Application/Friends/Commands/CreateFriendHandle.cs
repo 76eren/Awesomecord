@@ -1,4 +1,5 @@
-﻿using Application.Users.DTOs;
+﻿using Application.Common.Exceptions;
+using Application.Users.DTOs;
 using AutoMapper;
 using Domain;
 using MediatR;
@@ -15,19 +16,22 @@ public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper) : IReque
         var receiver = await db.Users.FirstOrDefaultAsync(u => u.UserHandle == request.ReceiverHandle, cancellationToken);
 
         if (sender is null || receiver is null)
+        {
             throw new ArgumentException("Sender or receiver not found.");
+        }
+        
+        var existingRequest = await db.FriendRequests.FirstOrDefaultAsync(fr => 
+            fr.RequesterId == sender.Id && fr.RecipientId == receiver.Id, cancellationToken);
+        if (existingRequest is not null)
+        {
+            throw new FriendRequestAlreadyExistsException();
+        }
 
         var friendRequest = FriendRequest.Create(sender.Id, receiver.Id);
         db.Set<FriendRequest>().Add(friendRequest);
         
 
         await db.SaveChangesAsync(cancellationToken);
-        
-        // Fetch user to test
-        // Find with handle testuser
-        // var user1 = db.Users.FirstOrDefault(u => u.UserHandle == "testuser");
-        // var user2 = db.Users.FirstOrDefault(u => u.UserHandle == "testuser2");
-
 
         return new FriendRequestDto(request.SenderHandle, request.ReceiverHandle);
     }

@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using API.Contracts.Friend;
+using Application.Common.Exceptions;
 using Application.Friends.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,18 +29,20 @@ public class FriendController : BaseApiController
         {
             return Unauthorized();
         }
-
-        // Make sure a user can only send a friend request on their own behalf
-        if (userHandle != requestContract.senderHandle)
-        {
-            return BadRequest();
-        }
         
         var command = new CreateFriendRequestCommand(
-            requestContract.senderHandle,
+            userHandle,
             requestContract.receiverHandle);
 
-        await Mediator.Send(command, ct);
+        try
+        {
+            await Mediator.Send(command, ct);
+
+        }
+        catch (FriendRequestAlreadyExistsException ex)
+        {
+            return BadRequest("Friend request has already been made.");
+        }
         
         return new OkResult();
     }
