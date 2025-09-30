@@ -1,6 +1,9 @@
 import React from "react";
 import Navbar from "../Navbar/Navbar.tsx";
 import FriendCard from "./FriendCard";
+import type {CreateFriendRequestModel} from "../../Models/friend/createFriendRequest.model.ts";
+import {initiateFriendRequest} from "../../services/friendService.ts";
+import {toast, ToastContainer} from "react-toastify";
 
 type Friend = {
     id: string;
@@ -48,9 +51,34 @@ export default function Friends() {
         alert(`Start chat with ${friend.displayName}`);
     };
 
+    const [input, setInput] = React.useState<string>("");
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value ?? "");
+    };
+
+
+    async function sendFriendRequest(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+
+        let model: CreateFriendRequestModel;
+        model = {
+            ReceiverHandle: input
+        };
+
+        try {
+            await initiateFriendRequest(model);
+            toast.success("Friend successfully!");
+            setInput("");
+        }
+        catch (error) {
+            toast.error("Failed to send friend request.");
+        }
+    }
+
 
     return (
         <>
+            <ToastContainer/>
             <div className="min-h-screen flex bg-gray-50">
                 <Navbar />
                 <main className="flex-1 p-6 flex flex-col h-screen max-h-screen">
@@ -60,11 +88,15 @@ export default function Friends() {
                         </h1>
 
                         <div className="mb-6">
-                            <form className="flex">
+                            <form className="flex" onSubmit={sendFriendRequest}>
                                 <input
                                     type="text"
                                     placeholder="Enter a @userhandle"
                                     className="flex-1 p-2 border border-gray-500 rounded-l-md focus:outline-none focus:ring-2 focus:ring-black/20"
+                                    onChange={handleChange}
+                                    value={input}
+                                    required
+
                                 />
                                 <button
                                     type="submit"

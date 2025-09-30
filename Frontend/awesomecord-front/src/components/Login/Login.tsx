@@ -2,8 +2,7 @@ import "./Login.css";
 import {useState} from "react";
 import * as React from "react";
 import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
-import type {UserCreateModel} from "../../Models/User/userCreate.model.ts";
-import {loginUser, registerUser} from "../../services/authService.ts";
+import {loginUser} from "../../services/authService.ts";
 import {toast} from "react-toastify";
 import type {UserLoginModel} from "../../Models/User/userLogin.model.ts";
 
