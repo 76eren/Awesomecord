@@ -21,4 +21,8 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="CQRS\" />
+  </ItemGroup>
+
 </Project>
