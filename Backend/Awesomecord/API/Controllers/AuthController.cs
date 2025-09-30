@@ -102,20 +102,6 @@ public class AuthController : BaseApiController
         var dto = Mapper.Map<UserDto>(user);
         var contract = Mapper.Map<GetAllDataUserResponseContract>(dto);
         
-        // automapper fails to map the lists so we do it manually here
-        // The friends, incoming and outgoing all only contain user handles
-        contract.friends = user.Friends
-            .Select(f => f.Friend.UserHandle)
-            .ToList();
-
-        contract.sentFriendRequests = user.SentFriendRequests
-            .Select(r => r.Recipient.UserHandle)
-            .ToList();
-
-        contract.receivedFriendRequests = user.ReceivedFriendRequests
-            .Select(r => r.Requester.UserHandle)
-            .ToList();
-        
         return Ok(contract);
     }
     
