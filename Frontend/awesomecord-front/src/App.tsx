@@ -11,7 +11,7 @@ import AddFriend from "./components/AddFriend/AddFriend.tsx";
 
 function App() {
     return (
-        <div className="container">
+        <div className="min-h-screen w-full bg-gray-50">
             <Routes>
                 <Route path="/" element={<Navigate to="/chats" replace />} />
 
