@@ -27,7 +27,10 @@ builder.Services.AddCors(options =>
 
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    opt.UseLazyLoadingProxies();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

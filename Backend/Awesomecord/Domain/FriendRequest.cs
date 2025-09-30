@@ -8,16 +8,16 @@ public class FriendRequest
     public string Id = Guid.NewGuid().ToString();
     
     public string RequesterId { get; private set; } = default!;
-    public User   Requester   { get; private set; } = default!;
+    public virtual User   Requester   { get; private set; } = default!;
 
     public string RecipientId { get; private set; } = default!;
-    public User   Recipient   { get; private set; } = default!;
+    public virtual User   Recipient   { get; private set; } = default!;
     
     public FriendshipStatus Status { get; private set; } = FriendshipStatus.PENDING;
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? DecidedAt { get; private set; } = null;
     
-    private FriendRequest() {}
+    public FriendRequest() {}
     
     public static FriendRequest Create(string requesterId, string recipientId)
     {

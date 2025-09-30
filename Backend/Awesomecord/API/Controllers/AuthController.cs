@@ -92,12 +92,6 @@ public class AuthController : BaseApiController
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
         
         var user = await _db.Users
-            .Include(u => u.Friends)
-                .ThenInclude(f => f.Friend)
-            .Include(u => u.SentFriendRequests)
-                .ThenInclude(fr => fr.Recipient)
-            .Include(u => u.ReceivedFriendRequests)
-                .ThenInclude(fr => fr.Requester)
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
         
         if (user is null)

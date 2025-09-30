@@ -12,10 +12,10 @@ public class User
     public string Phone { get; private set; } = default!;
     public string PasswordHash { get; set; } = default!;
     
-    public List<Friendship> Friends { get; private set; } = new();
+    public virtual ICollection<Friendship> Friends { get; private set; } = new List<Friendship>();
     
-    public List<FriendRequest> SentFriendRequests { get; private set; } = new();
-    public List<FriendRequest> ReceivedFriendRequests { get; private set; } = new();
+    public virtual ICollection<FriendRequest> SentFriendRequests { get; private set; } = new List<FriendRequest>();
+    public virtual ICollection<FriendRequest> ReceivedFriendRequests { get; private set; } = new List<FriendRequest>();
     
     // Todo: add logic for profile pictures
     // ...
