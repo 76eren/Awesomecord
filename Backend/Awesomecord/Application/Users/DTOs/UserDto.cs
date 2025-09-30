@@ -1,4 +1,6 @@
-﻿namespace Application.Users.DTOs;
+﻿using Domain;
+
+namespace Application.Users.DTOs;
 
 public class UserDto
 {
@@ -11,4 +13,8 @@ public class UserDto
     public string Email { get; init; } = default!;
     public string Phone { get; init; } = default!;
     public string PasswordHash { get; init; } = default!;
+    
+    public List<Friendship> Friends { get; private set; } = new();
+    public List<FriendRequest> SentFriendRequests { get; private set; } = new();
+    public List<FriendRequest> ReceivedFriendRequests { get; private set; } = new();
 }

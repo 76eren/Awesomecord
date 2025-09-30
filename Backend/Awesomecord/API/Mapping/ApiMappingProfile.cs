@@ -8,6 +8,7 @@ public sealed class ApiMappingProfile : Profile
 {
     public ApiMappingProfile()
     {
-        CreateMap<UserDto, GetUserResponseContract>();
+        CreateMap<UserDto, GetAllDataUserResponseContract>();
+        CreateMap<UserDto, GetUserResponseNoSensitiveDataResponse>();
     }
 }

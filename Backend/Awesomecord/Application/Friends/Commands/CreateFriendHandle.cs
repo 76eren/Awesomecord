@@ -18,16 +18,16 @@ public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper) : IReque
             throw new ArgumentException("Sender or receiver not found.");
 
         var friendRequest = FriendRequest.Create(sender.Id, receiver.Id);
-
         db.Set<FriendRequest>().Add(friendRequest);
-
-        sender.SentFriendRequests.Add(friendRequest);
-        receiver.ReceivedFriendRequests.Add(friendRequest);
-
-        db.Users.Update(sender);
-        db.Users.Update(receiver);
+        
 
         await db.SaveChangesAsync(cancellationToken);
+        
+        // Fetch user to test
+        // Find with handle testuser
+        // var user1 = db.Users.FirstOrDefault(u => u.UserHandle == "testuser");
+        // var user2 = db.Users.FirstOrDefault(u => u.UserHandle == "testuser2");
+
 
         return new FriendRequestDto(request.SenderHandle, request.ReceiverHandle);
     }

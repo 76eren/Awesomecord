@@ -17,6 +17,9 @@ public class User
     public List<FriendRequest> SentFriendRequests { get; private set; } = new();
     public List<FriendRequest> ReceivedFriendRequests { get; private set; } = new();
     
+    // Todo: add logic for profile pictures
+    // ...
+    
     public User() { }
     
     public static User Create(

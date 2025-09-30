@@ -6,8 +6,10 @@ using Application.Common.Exceptions;
 using Application.Users.Commands;
 using Application.Users.DTOs;
 using Application.Users.Queries;
+using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Persistence;
 
@@ -34,7 +36,7 @@ public class AuthController : BaseApiController
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<GetUserResponseContract>> Login([FromBody] LoginRequestContract requestContract, CancellationToken ct)
+    public async Task<ActionResult<GetUserResponseNoSensitiveDataResponse>> Login([FromBody] LoginRequestContract requestContract, CancellationToken ct)
     {
         try
         {
@@ -50,7 +52,7 @@ public class AuthController : BaseApiController
             var (opaque, row) = await _refreshTokenService.IssueAsync(user.Id, ct);
             CookieWriter.SetRefreshToken(Response, opaque, row.ExpiresAtUtc);
 
-            var responseContract = Mapper.Map<GetUserResponseContract>(userDto);
+            var responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(userDto);
             return Ok(responseContract);
         }
         catch (InvalidCredentialsException)
@@ -84,22 +86,48 @@ public class AuthController : BaseApiController
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<ActionResult<GetUserResponseContract>> Me(CancellationToken ct)
+    public async Task<ActionResult<GetAllDataUserResponseContract>> Me(CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
-
-        var user = await _db.Users.FindAsync(new object?[] { userId }, ct);
-        if (user is null) return Unauthorized();
-
+        
+        var user = await _db.Users
+            .Include(u => u.Friends)
+                .ThenInclude(f => f.Friend)
+            .Include(u => u.SentFriendRequests)
+                .ThenInclude(fr => fr.Recipient)
+            .Include(u => u.ReceivedFriendRequests)
+                .ThenInclude(fr => fr.Requester)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+        
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+        
         var dto = Mapper.Map<UserDto>(user);
-        var contract = Mapper.Map<GetUserResponseContract>(dto);
+        var contract = Mapper.Map<GetAllDataUserResponseContract>(dto);
+        
+        // automapper fails to map the lists so we do it manually here
+        // The friends, incoming and outgoing all only contain user handles
+        contract.friends = user.Friends
+            .Select(f => f.Friend.UserHandle)
+            .ToList();
+
+        contract.sentFriendRequests = user.SentFriendRequests
+            .Select(r => r.Recipient.UserHandle)
+            .ToList();
+
+        contract.receivedFriendRequests = user.ReceivedFriendRequests
+            .Select(r => r.Requester.UserHandle)
+            .ToList();
+        
         return Ok(contract);
     }
     
     
     [HttpPost]
-    public async Task<ActionResult<GetUserResponseContract>> Register([FromBody] CreateUserRequestContract requestContract, CancellationToken ct)
+    public async Task<ActionResult<GetUserResponseNoSensitiveDataResponse>> Register([FromBody] CreateUserRequestContract requestContract, CancellationToken ct)
     {
         var command = new CreateUserCommand(
             requestContract.DisplayName, 
@@ -115,7 +143,7 @@ public class AuthController : BaseApiController
         try
         {
             UserDto result = await Mediator.Send(command, ct);
-            GetUserResponseContract responseContract = Mapper.Map<GetUserResponseContract>(result);
+            GetUserResponseNoSensitiveDataResponse responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
             return Ok(responseContract);
         }
         catch (HandleAlreadyTakenException _)

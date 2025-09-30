@@ -14,11 +14,13 @@ namespace API.Controllers;
 [ApiController]
 public sealed class UserController : BaseApiController
 {
+    
+    // This endpoint is public and will be used for looking up other users by their id
     [HttpGet("{id}")]
-    public async Task<ActionResult<GetUserResponseContract>> GetById(string id, CancellationToken ct)
+    public async Task<ActionResult<GetUserResponseNoSensitiveDataResponse>> GetById(string id, CancellationToken ct)
     {
         UserDto result = await Mediator.Send(new GetUserById.Query { Id = id }, cancellationToken: ct);
-        GetUserResponseContract responseContract = Mapper.Map<GetUserResponseContract>(result);
-        return Ok(responseContract);
+        GetUserResponseNoSensitiveDataResponse responseResponseNoSensitiveDataResponse = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
+        return Ok(responseResponseNoSensitiveDataResponse);
     } 
 }
