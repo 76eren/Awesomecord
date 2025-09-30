@@ -7,7 +7,7 @@ import {GuestGuard} from "./guards/GuestGuard.tsx";
 import {ProtectedGuard} from "./guards/ProtectedGuard.tsx";
 import NotificationsList from "./components/Notifications/NotificationsList.tsx";
 import ServerList from "./components/ServerList/ServerList.tsx";
-import AddFriend from "./components/AddFriend/AddFriend.tsx";
+import Friends from "./components/Friends/Friends.tsx";
 
 function App() {
     return (
@@ -62,7 +62,7 @@ function App() {
                     path="/add-friend"
                     element={
                         <ProtectedGuard>
-                            <AddFriend />
+                            <Friends />
                         </ProtectedGuard>
                     }
                 />
