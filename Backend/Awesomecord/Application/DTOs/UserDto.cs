@@ -1,6 +1,6 @@
 ﻿using Domain;
 
-namespace Application.Users.DTOs;
+namespace Application.DTOs;
 
 public class UserDto
 {

@@ -1,12 +1,13 @@
 ﻿using Application.Common.Exceptions;
-using Application.Users.DTOs;
+using Application.DTOs;
 using AutoMapper;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Microsoft.AspNetCore.Identity;
-namespace Application.Users.Commands;
+
+namespace Application.CQRS.Users.Commands;
 
 public sealed class CreateUserHandler(AppDbContext context, IMapper mapper)
     : IRequestHandler<CreateUserCommand, UserDto>

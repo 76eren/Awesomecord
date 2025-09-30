@@ -1,6 +1,7 @@
-﻿using FluentValidation;
+﻿using Application.CQRS.Users.Commands;
+using FluentValidation;
 
-namespace Application.Users.Commands;
+namespace Application.CQRS.Users.Commands;
 
 public sealed class CreateUserValidator : AbstractValidator<CreateUserCommand>
 {

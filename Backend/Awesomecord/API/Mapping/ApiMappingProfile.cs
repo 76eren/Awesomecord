@@ -1,6 +1,6 @@
 using AutoMapper;
-using Application.Users.DTOs;
-using API.Contracts;
+using API.Contracts.User;
+using Application.DTOs;
 
 namespace API.Mapping;
 

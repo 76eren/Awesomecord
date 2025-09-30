@@ -5,6 +5,8 @@ using Domain;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
+namespace API.Services;
+
 public interface ITokenService
 {
     string CreateAccessToken(User user);

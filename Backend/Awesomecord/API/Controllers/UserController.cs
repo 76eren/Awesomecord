@@ -1,9 +1,6 @@
-﻿using API.Contracts;
-using Application.Users.Commands;
-using Application.Users.DTOs;
-using Application.Users.Queries;
-using AutoMapper;
-using MediatR;
+﻿using API.Contracts.User;
+using Application.CQRS.Users.Queries;
+using Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 // Todo: might as well move this to auth controller?

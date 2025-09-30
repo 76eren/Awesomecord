@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
-using API.Contracts.Friend;
+using API.Contracts.Friend.Create;
 using Application.Common.Exceptions;
-using Application.Friends.Commands;
+using Application.CQRS.Friends.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence;
@@ -21,7 +21,7 @@ public class FriendController : BaseApiController
     
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> CreateFriendRequest([FromBody] CreateFriendRequestContract requestContract, CancellationToken ct)
+    public async Task<IActionResult> CreateFriendRequest([FromBody] FriendRequestContract requestContract, CancellationToken ct)
     {
         var userHandle = User.FindFirstValue(ClaimTypes.Name);
 
@@ -32,7 +32,7 @@ public class FriendController : BaseApiController
         
         var command = new CreateFriendRequestCommand(
             userHandle,
-            requestContract.receiverHandle);
+            requestContract.ReceiverHandle);
 
         try
         {

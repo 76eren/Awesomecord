@@ -1,12 +1,11 @@
 ﻿using System.Security.Claims;
-using API.Contracts;
 using API.Contracts.Login;
+using API.Contracts.User;
 using API.Services;
 using Application.Common.Exceptions;
-using Application.Users.Commands;
-using Application.Users.DTOs;
-using Application.Users.Queries;
-using Domain;
+using Application.CQRS.Users.Commands;
+using Application.CQRS.Users.Queries;
+using Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

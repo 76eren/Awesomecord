@@ -1,12 +1,12 @@
 ﻿using Application.Common.Exceptions;
-using Application.Users.DTOs;
+using Application.DTOs;
 using AutoMapper;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
-namespace Application.Friends.Commands;
+namespace Application.CQRS.Friends.Commands;
 
 public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper) : IRequestHandler<CreateFriendRequestCommand, FriendRequestDto>
 {

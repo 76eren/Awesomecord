@@ -1,7 +1,7 @@
-﻿using Application.Users.DTOs;
+﻿using Application.DTOs;
 using MediatR;
 
-namespace Application.Users.Commands;
+namespace Application.CQRS.Users.Commands;
 
 
 public sealed record CreateUserCommand(

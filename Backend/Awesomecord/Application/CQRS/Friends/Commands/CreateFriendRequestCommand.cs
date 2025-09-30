@@ -1,7 +1,7 @@
-﻿using Application.Users.DTOs;
+﻿using Application.DTOs;
 using MediatR;
 
-namespace Application.Friends.Commands;
+namespace Application.CQRS.Friends.Commands;
 
 public sealed record CreateFriendRequestCommand
 (

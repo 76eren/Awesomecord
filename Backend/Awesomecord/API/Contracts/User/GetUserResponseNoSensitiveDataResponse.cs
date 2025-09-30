@@ -1,4 +1,4 @@
-﻿namespace API.Contracts;
+﻿namespace API.Contracts.User;
 
 public sealed class GetUserResponseNoSensitiveDataResponse
 {

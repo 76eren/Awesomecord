@@ -1,4 +1,4 @@
-﻿namespace Application.Users.DTOs;
+﻿namespace Application.DTOs;
 
 public class FriendRequestDto(string senderHandle, string receiverHandle)
 {

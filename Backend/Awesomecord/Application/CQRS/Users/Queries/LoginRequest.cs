@@ -1,5 +1,5 @@
 ﻿using Application.Common.Exceptions;
-using Application.Users.DTOs;
+using Application.DTOs;
 using AutoMapper;
 using Domain;
 using MediatR;
@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
-namespace Application.Users.Queries;
+namespace Application.CQRS.Users.Queries;
 
 public class LoginRequest
 {

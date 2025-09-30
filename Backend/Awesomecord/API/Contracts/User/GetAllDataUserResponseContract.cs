@@ -1,6 +1,6 @@
 ﻿using Domain;
 
-namespace API.Contracts;
+namespace API.Contracts.User;
 
 // Contains sensitive data, only to be used when the user requests their own data
 public sealed class GetAllDataUserResponseContract

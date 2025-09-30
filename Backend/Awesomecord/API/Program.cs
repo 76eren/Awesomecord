@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Text;
 using API.Services;
-using Application.Users.Commands;
+using Application.CQRS.Users.Commands;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;

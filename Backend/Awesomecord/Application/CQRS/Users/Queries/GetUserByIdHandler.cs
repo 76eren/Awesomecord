@@ -1,9 +1,9 @@
-﻿using Application.Users.DTOs;
+﻿using Application.DTOs;
 using AutoMapper;
 using MediatR;
 using Persistence;
 
-namespace Application.Users.Queries;
+namespace Application.CQRS.Users.Queries;
 
 public class GetUserById
 {
