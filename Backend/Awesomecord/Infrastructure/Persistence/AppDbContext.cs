@@ -39,9 +39,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             b.HasKey(f => f.Id);
             b.Property(fr => fr.RequesterId).HasMaxLength(64);
             b.Property(fr => fr.RecipientId).HasMaxLength(64);
-
-            b.Property(fr => fr.Status).HasConversion<int>().IsRequired();
-
+            
             b.Property(fr => fr.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -74,7 +72,6 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
                 .HasForeignKey(f => f.FriendId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            b.Property(f => f.Status).HasConversion<int>().IsRequired();
             b.Property(f => f.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 

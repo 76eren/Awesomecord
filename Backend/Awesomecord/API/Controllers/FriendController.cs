@@ -19,6 +19,7 @@ public class FriendController : BaseApiController
         _db = db;
     }
     
+    
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateFriendRequest([FromBody] FriendRequestContract requestContract, CancellationToken ct)
@@ -46,4 +47,41 @@ public class FriendController : BaseApiController
         
         return new OkResult();
     }
+    
+    [Authorize]
+    [HttpPost("{userThatIsRequesting}")]
+    public async Task<IActionResult> HandleFriendRequest(
+        string userThatIsRequesting,
+        [FromBody] FriendRequestAcceptDenyContract contract, 
+        CancellationToken ct
+        )
+    {
+        var userThatIsAcceptingOrDenying = User.FindFirstValue(ClaimTypes.Name);
+        if (string.IsNullOrEmpty(userThatIsAcceptingOrDenying))
+        {
+            return Unauthorized();
+        }
+        
+        var command = new HandleFriendRequestCommand(userThatIsRequesting, userThatIsAcceptingOrDenying, contract.Action.ToLower());
+        try
+        {
+            await Mediator.Send(command, ct);
+        }
+        catch (FriendRequestNotFoundException ex)
+        {
+            return NotFound("Friend request not found.");
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest("Action must be 'accept' or 'deny'.");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "An error occurred while processing the request.");
+        }
+        
+        return new OkResult();
+    }
+    
+    
 }

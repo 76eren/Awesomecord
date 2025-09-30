@@ -4,18 +4,17 @@ namespace Domain;
 
 public class FriendRequest
 {
-    [Key]
-    public string Id = Guid.NewGuid().ToString();
+    // This is only to track request, upon denial or acceptance, it will be deleted.
     
+    [Key]
+    public string Id { get; private set; } = Guid.NewGuid().ToString();    
     public string RequesterId { get; private set; } = default!;
     public virtual User   Requester   { get; private set; } = default!;
 
     public string RecipientId { get; private set; } = default!;
-    public virtual User   Recipient   { get; private set; } = default!;
+    public virtual User   Recipient   { get; set; } = default!;
     
-    public FriendshipStatus Status { get; private set; } = FriendshipStatus.PENDING;
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
-    public DateTime? DecidedAt { get; private set; } = null;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public FriendRequest() {}
     
@@ -30,7 +29,6 @@ public class FriendRequest
         {
             RequesterId = requesterId,
             RecipientId = recipientId,
-            Status      = FriendshipStatus.PENDING
         };
     }
     
