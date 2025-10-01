@@ -19,3 +19,7 @@ export async function me() {
 export async function logout() {
     return apiFetch<void>("auth/logout", {method: "POST"});
 }
+
+export async function isAuthenticated() {
+    return apiFetch<void>("auth/authenticated", {method: "GET"});
+}

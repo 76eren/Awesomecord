@@ -1,30 +1,29 @@
-import { useEffect, useState } from "react";
-import { me } from "../services/authService";
-import type {UserModel} from "../Models/User/user.model.ts";
+import {useEffect, useState} from "react";
+import {isAuthenticated} from "../services/authService.ts";
 
-// Todo: Add token refresh logic and create a different endpoint for auth
+
 export function useAuth() {
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<UserModel | null>(null);
+    const [authenticated, setAuthenticated] = useState(false);
 
     useEffect(() => {
         let active = true;
 
-        me()
-            .then((u) => {
-                if (active) setUser(u);
-            })
-            .catch(() => {
-                if (active) setUser(null);
-            })
-            .finally(() => {
+        (async () => {
+            try {
+                await isAuthenticated();
+                if (active) setAuthenticated(true);
+            } catch {
+                if (active) setAuthenticated(false);
+            } finally {
                 if (active) setLoading(false);
-            });
+            }
+        })();
 
         return () => {
             active = false;
         };
     }, []);
 
-    return { user, loading, authenticated: !!user };
+    return { loading, authenticated };
 }

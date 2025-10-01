@@ -104,6 +104,20 @@ public class AuthController : BaseApiController
         return Ok(contract);
     }
     
+    [HttpGet("authenticated")]
+    public async Task<IActionResult> IsAuthenticated()
+    {
+        if (User.Identity is not { IsAuthenticated: true })
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Not authenticated",
+                Detail = "The user is not authenticated.",
+                Status = StatusCodes.Status401Unauthorized
+            });
+
+        return NoContent();
+    }
+    
     
     [HttpPost]
     public async Task<ActionResult<GetUserResponseNoSensitiveDataResponse>> Register([FromBody] CreateUserRequestContract requestContract, CancellationToken ct)
