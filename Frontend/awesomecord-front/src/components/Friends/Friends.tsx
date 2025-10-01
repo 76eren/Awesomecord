@@ -16,12 +16,6 @@ type Friend = {
 
 export default function Friends() {
 
-    // This is for testing purposes to load user from a context
-    const { user, isLoading, error } = useUserContext();
-    if (!isLoading && error == null) {
-        console.log("Username is: " + user.userHandle);
-    }
-
     // Mock data to be loaded dynamically later
     const mockFriends: Friend[] = [
         {

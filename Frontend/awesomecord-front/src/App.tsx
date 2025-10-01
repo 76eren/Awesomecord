@@ -5,7 +5,7 @@ import Chats from "./components/Chats/Chats.tsx";
 import Register from "./components/Register/Register.tsx";
 import {GuestGuard} from "./guards/GuestGuard.tsx";
 import {ProtectedGuard} from "./guards/ProtectedGuard.tsx";
-import NotificationsList from "./components/Notifications/NotificationsList.tsx";
+import Notifications from "./components/Notifications/Notifications.tsx";
 import ServerList from "./components/ServerList/ServerList.tsx";
 import Friends from "./components/Friends/Friends.tsx";
 
@@ -35,7 +35,7 @@ function App() {
                     path="/notifications"
                     element={
                         <ProtectedGuard>
-                            <NotificationsList />
+                            <Notifications />
                         </ProtectedGuard>
                     }
                 />
