@@ -27,7 +27,7 @@ export default function FriendCard({
                 <img
                     src={avatar}
                     alt={`${displayName} avatar`}
-                    className="h-10 w-10 rounded-full object-cover ring-1 ring-black/5"
+                    className="h-15 w-15 rounded-full object-cover ring-1 ring-black/5"
                 />
                 <div className="min-w-0">
                     <div className="flex items-baseline gap-2">

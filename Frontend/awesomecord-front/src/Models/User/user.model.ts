@@ -7,4 +7,6 @@ export interface UserModel {
     lastName: string;
     email: string;
     phone: string;
+    sentFriendRequests: string[];
+    receivedFriendRequests: string[];
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { me } from "../services/authService";
 import type {UserModel} from "../Models/User/user.model.ts";
 
+// Todo: Add token refresh logic and create a different endpoint for auth
 export function useAuth() {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<UserModel | null>(null);
