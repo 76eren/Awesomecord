@@ -4,6 +4,7 @@ import FriendCard from "./FriendCard";
 import type {CreateFriendRequestModel} from "../../Models/friend/createFriendRequest.model.ts";
 import {initiateFriendRequest} from "../../services/friendService.ts";
 import {toast, ToastContainer} from "react-toastify";
+import {useUserContext} from "../../lib/user-context.tsx";
 
 type Friend = {
     id: string;
@@ -14,6 +15,13 @@ type Friend = {
 };
 
 export default function Friends() {
+
+    // This is for testing purposes to load user from a context
+    const { user, isLoading, error } = useUserContext();
+    if (!isLoading && error == null) {
+        console.log("Username is: " + user.userHandle);
+    }
+
     // Mock data to be loaded dynamically later
     const mockFriends: Friend[] = [
         {

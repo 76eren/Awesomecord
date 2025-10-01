@@ -12,7 +12,7 @@ public class RefreshToken
 
     public bool IsActive => RevokedAtUtc is null && DateTime.UtcNow < ExpiresAtUtc;
 
-    private RefreshToken() { }
+    public RefreshToken() { }
 
     public static RefreshToken Create(string userId, string tokenHash, DateTime expiresAtUtc) =>
         new()
