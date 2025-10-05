@@ -17,7 +17,7 @@ public class SignalRNotificationsPublisher : INotificationsPublisher
 
     public Task FriendRequestReceivedAsync(
         string recipientUserId,
-        FriendRequestReceivedPayload<UserDto> payload,
+        FriendRequestReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default)
     {
         return _hub.Clients.User(recipientUserId)

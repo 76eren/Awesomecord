@@ -7,6 +7,6 @@ public interface INotificationsPublisher
 {
     Task FriendRequestReceivedAsync(
         string recipientUserId,
-        FriendRequestReceivedPayload<UserDto> payload,
+        FriendRequestReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default);
 }
