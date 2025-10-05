@@ -1,13 +1,17 @@
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
+using API.Hubs;
 using API.Services;
 using Application.CQRS.Users.Commands;
+using Application.Notifications;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Persistence;
 using DotNetEnv;
+using Microsoft.AspNetCore.SignalR;
 
 Env.Load();
 
@@ -81,16 +85,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services
+    .AddSignalR()
+    .AddJsonProtocol(opts =>
+    {
+        opts.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        opts.PayloadSerializerOptions.MaxDepth = 16;
+    });
+builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
+builder.Services.AddScoped<INotificationsPublisher, SignalRNotificationsPublisher>();
 
 
 var app = builder.Build();
 
-// Enable HTTPS redirection so the app will respond on https and redirect http -> https
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHub<NotificationsHub>("/hubs/notifications").RequireCors("AllowFrontend");
 
 app.MapControllers();
 

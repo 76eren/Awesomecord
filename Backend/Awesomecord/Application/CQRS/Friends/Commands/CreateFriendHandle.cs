@@ -1,5 +1,7 @@
 ﻿using Application.Common.Exceptions;
 using Application.DTOs;
+using Application.DTOs.Notifications;
+using Application.Notifications;
 using AutoMapper;
 using Domain;
 using MediatR;
@@ -8,7 +10,7 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper) : IRequestHandler<CreateFriendRequestCommand, FriendRequestDto>
+public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper, INotificationsPublisher notifier) : IRequestHandler<CreateFriendRequestCommand, FriendRequestDto>
 {
     public async Task<FriendRequestDto> Handle(CreateFriendRequestCommand request, CancellationToken cancellationToken)
     {
@@ -33,6 +35,18 @@ public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper) : IReque
 
         await db.SaveChangesAsync(cancellationToken);
 
+        var freshRecipient = await db.Users.FirstAsync(u => u.Id == receiver.Id, cancellationToken);
+        var freshRecipientDto = mapper.Map<UserDto>(freshRecipient);
+
+        var payload = new FriendRequestReceivedPayload<UserDto>
+        {
+            RequesterHandle = sender.UserHandle,
+            RecipientHandle = receiver.UserHandle,
+            UpdatedUserModel = freshRecipientDto
+        };
+
+        await notifier.FriendRequestReceivedAsync(receiver.Id, payload, cancellationToken);
+        
         return new FriendRequestDto(request.SenderHandle, request.ReceiverHandle);
     }
 }
