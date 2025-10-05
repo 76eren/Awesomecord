@@ -15,9 +15,9 @@ public class UserFlatDto
     public string Email { get; init; } = default!;
     public string Phone { get; init; } = default!;
 
-    public List<FriendshipFlatDto> Friends { get; private set; } = new();
-    public List<FriendRequestFlatDto> SentFriendRequests { get; private set; } = new();
-    public List<FriendRequestFlatDto> ReceivedFriendRequests { get; private set; } = new();
+    public List<string> Friends { get; private set; } = new();
+    public List<string> SentFriendRequests { get; private set; } = new();
+    public List<string> ReceivedFriendRequests { get; private set; } = new();
 
 
     public static UserFlatDto FromUser(User user)
@@ -32,24 +32,9 @@ public class UserFlatDto
             LastName = user.LastName,
             Email = user.Email,
             Phone = user.Phone,
-            Friends = user.Friends.Select(f => new FriendshipFlatDto
-            {
-                Id = f.Id,
-                UserId = f.UserId,
-                FriendId = f.FriendId
-            }).ToList(),
-            SentFriendRequests = user.SentFriendRequests.Select(fr => new FriendRequestFlatDto
-            {
-                Id = fr.Id,
-                RequesterId = fr.RequesterId,
-                RecipientId = fr.RecipientId
-            }).ToList(),
-            ReceivedFriendRequests = user.ReceivedFriendRequests.Select(fr => new FriendRequestFlatDto
-            {
-                Id = fr.Id,
-                RequesterId = fr.RequesterId,
-                RecipientId = fr.RecipientId
-            }).ToList()
+            Friends = user.Friends.Select(f => f.FriendId).ToList(),
+            SentFriendRequests = user.SentFriendRequests.Select(r => r.RecipientId).ToList(),
+            ReceivedFriendRequests = user.ReceivedFriendRequests.Select(r => r.RequesterId).ToList()
         };
     }
 }

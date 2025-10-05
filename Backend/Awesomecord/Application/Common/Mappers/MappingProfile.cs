@@ -9,8 +9,5 @@ public sealed class MappingProfile : Profile
     public MappingProfile()
     {
         CreateMap<User, UserDto>();
-        
-        CreateMap<Friendship, FriendshipFlatDto>();
-        CreateMap<FriendRequest, FriendRequestFlatDto>();
     }
 }

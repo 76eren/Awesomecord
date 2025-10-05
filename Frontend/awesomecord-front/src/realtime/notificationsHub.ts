@@ -2,6 +2,7 @@ import * as signalR from "@microsoft/signalr";
 
 let hub: signalR.HubConnection | null = null;
 
+// Todo: make this a global singleton service
 export function getNotificationsHub(baseUrl: string) {
     if (!hub) {
         hub = new signalR.HubConnectionBuilder()

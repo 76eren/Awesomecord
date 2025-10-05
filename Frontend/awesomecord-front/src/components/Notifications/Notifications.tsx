@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import Navbar from "../Navbar/Navbar";
 import { useUserContext } from "../../lib/user-context";
 import { ensureHubStarted, getNotificationsHub } from "../../realtime/notificationsHub";
+import type {UserModel} from "../../Models/User/user.model.ts";
+import {toast} from "react-toastify";
 
 export default function Notifications() {
-    const { user, isLoading, error } = useUserContext();
+    const { user, isLoading, error, fetchData } = useUserContext();
 
     useEffect(() => {
         const baseUrl = "https://localhost:5041";
@@ -16,10 +18,12 @@ export default function Notifications() {
             const handler = (payload: {
                 requesterHandle: string;
                 recipientHandle: string;
-                updatedUserModel: any;
+                updatedUserModel: UserModel;
             }) => {
-                console.log("[FriendRequestReceived]", payload.requesterHandle, "→", payload.recipientHandle);
-                console.log("[UpdatedUserModel]", payload.updatedUserModel);
+                // Seems a bit unnecessary as we already DO get the updated user model
+                fetchData();
+
+                toast.success("New friend request from " + payload.requesterHandle);
             };
 
             hub.on("FriendRequestReceived", handler);
@@ -27,7 +31,7 @@ export default function Notifications() {
         })().catch(e => console.error("[SignalR] start failed", e));
 
         return () => { if (unsub) unsub(); };
-    }, []);
+    }, [fetchData]);
 
     if (isLoading) return <h1>Loading</h1>;
     if (error != null) return <h1>An unknown error occured</h1>;
