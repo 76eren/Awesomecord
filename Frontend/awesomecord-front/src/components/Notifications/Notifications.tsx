@@ -6,7 +6,7 @@ import type {UserModel} from "../../Models/User/user.model.ts";
 import {toast} from "react-toastify";
 
 export default function Notifications() {
-    const { user, isLoading, error, fetchData } = useUserContext();
+    const { user, isLoading, error, fetchData, updateUser } = useUserContext();
 
     useEffect(() => {
         const baseUrl = "https://localhost:5041";
@@ -20,8 +20,8 @@ export default function Notifications() {
                 recipientHandle: string;
                 updatedUserModel: UserModel;
             }) => {
-                // Seems a bit unnecessary as we already DO get the updated user model
-                fetchData();
+                console.log("FriendRequestReceived", payload);
+                updateUser(payload.updatedUserModel);
 
                 toast.success("New friend request from " + payload.requesterHandle);
             };
