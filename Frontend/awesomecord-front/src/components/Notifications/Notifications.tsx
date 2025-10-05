@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import Navbar from "../Navbar/Navbar";
 import { useUserContext } from "../../lib/user-context";
-import { ensureHubStarted, getNotificationsHub } from "../../realtime/notificationsHub";
+import { ensureHubStarted } from "../../realtime/signalrHub.ts";
 import type {UserModel} from "../../Models/User/user.model.ts";
 import {toast} from "react-toastify";
 
@@ -10,10 +10,11 @@ export default function Notifications() {
 
     useEffect(() => {
         const baseUrl = "https://localhost:5041";
+        const hubUrl = "hubs/notifications";
         let unsub: (() => void) | undefined;
 
         (async () => {
-            const hub = await ensureHubStarted(baseUrl);
+            const hub = await ensureHubStarted(baseUrl, hubUrl);
 
             const handler = (payload: {
                 requesterHandle: string;
