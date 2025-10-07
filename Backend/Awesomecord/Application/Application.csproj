@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="CQRS\" />
+    <Folder Include="DTOs\signalR\" />
   </ItemGroup>
 
 </Project>

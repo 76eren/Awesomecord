@@ -25,5 +25,9 @@ export function useUser() {
         fetchData();
     }, []);
 
-    return { user, isLoading, error, fetchData };
+    function updateUser(newUser: UserModel) {
+        setUser(newUser);
+    }
+
+    return { user, isLoading, error, fetchData, updateUser };
 }

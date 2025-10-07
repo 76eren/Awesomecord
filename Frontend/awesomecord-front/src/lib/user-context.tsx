@@ -6,6 +6,7 @@ type UserCtx = {
     fetchData: () => Promise<void>;
     error: unknown;
     isLoading: boolean;
+    updateUser: (newUser: UserModel) => void;
 }
 
 const userContext = createContext<UserCtx | null>(null)
