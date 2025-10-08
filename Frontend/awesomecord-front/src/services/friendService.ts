@@ -6,15 +6,18 @@ export async function initiateFriendRequest(createFriendRequestModel: CreateFrie
 }
 
 export async function acceptFriendRequest(requesterHandle: string) {
-    let body ={
-        "Action" : "accept"
+    let body = {
+        "Action": "accept"
     }
-    return apiFetch<void>("friend/"+requesterHandle, {method: "POST", body: JSON.stringify(body)});
+    return apiFetch<void>("friend/" + requesterHandle, {method: "POST", json: body});
 }
 
 export async function denyFriendRequest(requesterHandle: string) {
     let body = {
-        "Action" : "deny"
+        "Action": "deny"
     }
-    return apiFetch<void>("friend/"+requesterHandle, {method: "POST", body: JSON.stringify(body)});
+    let headers = {
+        "Content-Type": "application/json"
+    }
+    return apiFetch<void>("friend/" + requesterHandle, {method: "POST", json: body, headers: headers});
 }
