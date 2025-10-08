@@ -13,24 +13,22 @@ namespace API.Controllers;
 public class FriendController : BaseApiController
 {
     private readonly AppDbContext _db;
-    
+
     public FriendController(AppDbContext db)
     {
         _db = db;
     }
-    
-    
+
+
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> CreateFriendRequest([FromBody] FriendRequestContract requestContract, CancellationToken ct)
+    public async Task<IActionResult> CreateFriendRequest([FromBody] FriendRequestContract requestContract,
+        CancellationToken ct)
     {
         var userHandle = User.FindFirstValue(ClaimTypes.Name);
 
-        if (string.IsNullOrEmpty(userHandle))
-        {
-            return Unauthorized();
-        }
-        
+        if (string.IsNullOrEmpty(userHandle)) return Unauthorized();
+
         var command = new CreateFriendRequestCommand(
             userHandle,
             requestContract.ReceiverHandle);
@@ -38,50 +36,45 @@ public class FriendController : BaseApiController
         try
         {
             await Mediator.Send(command, ct);
-
         }
         catch (FriendRequestAlreadyExistsException ex)
         {
             return BadRequest("Friend request has already been made.");
         }
-        
+
         return new OkResult();
     }
-    
+
     [Authorize]
-    [HttpPost("{userThatIsRequesting}")]
+    [HttpPost("{userThatIsRequestingId}")]
     public async Task<IActionResult> HandleFriendRequest(
-        string userThatIsRequesting,
-        [FromBody] FriendRequestAcceptDenyContract contract, 
+        string userThatIsRequestingId,
+        [FromBody] FriendRequestAcceptDenyContract contract,
         CancellationToken ct
-        )
+    )
     {
-        var userThatIsAcceptingOrDenying = User.FindFirstValue(ClaimTypes.Name);
-        if (string.IsNullOrEmpty(userThatIsAcceptingOrDenying))
-        {
-            return Unauthorized();
-        }
-        
-        var command = new HandleFriendRequestCommand(userThatIsRequesting, userThatIsAcceptingOrDenying, contract.Action.ToLower());
+        var userThatIsAcceptingOrDenyingId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userThatIsAcceptingOrDenyingId)) return Unauthorized();
+
+        var command = new HandleFriendRequestCommand(userThatIsRequestingId, userThatIsAcceptingOrDenyingId,
+            contract.Action.ToLower());
         try
         {
             await Mediator.Send(command, ct);
         }
-        catch (FriendRequestNotFoundException ex)
+        catch (FriendRequestNotFoundException _)
         {
             return NotFound("Friend request not found.");
         }
-        catch (ArgumentOutOfRangeException ex)
+        catch (ArgumentOutOfRangeException _)
         {
             return BadRequest("Action must be 'accept' or 'deny'.");
         }
-        catch (Exception ex)
+        catch (Exception _)
         {
             return StatusCode(500, "An error occurred while processing the request.");
         }
-        
+
         return new OkResult();
     }
-    
-    
 }
