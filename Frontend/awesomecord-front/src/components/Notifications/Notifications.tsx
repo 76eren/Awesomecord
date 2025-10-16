@@ -1,41 +1,47 @@
 import {useCallback, useEffect, useState} from "react";
 import Navbar from "../Navbar/Navbar";
 import {useUserContext} from "../../lib/user-context";
-import {ensureHubStarted} from "../../realtime/signalrHub.ts";
 import type {UserModel} from "../../Models/User/user.model.ts";
 import {toast, ToastContainer} from "react-toastify";
 import {NotificationCard} from "./NotificationCard";
 import {acceptFriendRequest, denyFriendRequest} from "../../services/friendService.ts";
+import {useSignalR} from "../../realtime/signalrProvider.tsx";
 
 export default function Notifications() {
     const {user, isLoading, error, fetchData, updateUser} = useUserContext();
+    const {ensure, on} = useSignalR();
     const [processing, setProcessing] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
-        const baseUrl = "https://localhost:5041";
-        const hubUrl = "hubs/notifications";
+        let canceled = false;
         let unsub: (() => void) | undefined;
 
         (async () => {
-            const hub = await ensureHubStarted(baseUrl, hubUrl);
+            try {
+                await ensure("notifications");
+                if (canceled) return;
 
-            const handler = (payload: {
-                requesterHandle: string;
-                recipientHandle: string;
-                updatedUserModel: UserModel;
-            }) => {
-                updateUser(payload.updatedUserModel);
-                toast.success("New friend request from " + payload.requesterHandle);
-            };
+                const handler = (payload: {
+                    requesterHandle: string;
+                    recipientHandle: string;
+                    updatedUserModel: UserModel;
+                }) => {
+                    console.log(payload)
+                    updateUser(payload.updatedUserModel);
+                    toast.success("New friend request from " + payload.requesterHandle);
+                };
 
-            hub.on("FriendRequestReceived", handler);
-            unsub = () => hub.off("FriendRequestReceived", handler);
-        })().catch((e) => console.error("[SignalR] start failed", e));
+                unsub = on("notifications", "FriendRequestReceived", handler);
+            } catch (e) {
+                console.error("[SignalR] start failed", e);
+            }
+        })();
 
         return () => {
+            canceled = true;
             if (unsub) unsub();
         };
-    }, [fetchData, updateUser]);
+    }, [ensure, on, updateUser]);
 
 
     const handleAccept = useCallback(
@@ -75,6 +81,7 @@ export default function Notifications() {
     if (isLoading) return <h1>Loading</h1>;
     if (error != null) return <h1>An unknown error occured</h1>;
 
+
     return (
         <>
             <ToastContainer/>
@@ -89,7 +96,7 @@ export default function Notifications() {
                                 Incoming requests
                             </h2>
                             <span className="text-xs text-gray-500">
-                                {user.receivedFriendRequests.length} total
+                                {user.receivedFriendRequests == undefined ? 0 : user.receivedFriendRequests.length} total
                             </span>
                         </div>
 
