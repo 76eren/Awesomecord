@@ -1,21 +1,15 @@
 import {useCallback, useEffect, useState} from "react";
 import Navbar from "../Navbar/Navbar";
-import type {UserModel} from "../../Models/User/user.model.ts";
 import {toast, ToastContainer} from "react-toastify";
 import {NotificationCard} from "./NotificationCard";
 import {acceptFriendRequest, denyFriendRequest} from "../../services/friendService.ts";
 import {useUserStore} from "../../store/userStore";
-import {useSignalRStore} from "../../store/signalrStore.ts";
 
 export default function Notifications() {
     const user = useUserStore((s) => s.user);
     const isLoading = useUserStore((s) => s.isLoading);
     const error = useUserStore((s) => s.error);
     const fetchUser = useUserStore((s) => s.fetchUser);
-    const setUser = useUserStore((s) => s.setUser);
-
-    const ensure = useSignalRStore((s) => s.ensure);
-    const on = useSignalRStore((s) => s.on);
 
     const [processing, setProcessing] = useState<Record<string, boolean>>({});
 
@@ -24,37 +18,6 @@ export default function Notifications() {
             void fetchUser();
         }
     }, [user, isLoading, fetchUser]);
-
-    useEffect(() => {
-        let canceled = false;
-        let unsub: (() => void) | undefined;
-
-        (async () => {
-            try {
-                await ensure("notifications");
-                if (canceled) return;
-
-                const handler = (payload: {
-                    requesterHandle: string;
-                    recipientHandle: string;
-                    updatedUserModel: UserModel;
-                }) => {
-                    console.log(payload);
-                    setUser(payload.updatedUserModel);
-                    toast.success("New friend request from " + payload.requesterHandle);
-                };
-
-                unsub = on("notifications", "FriendRequestReceived", handler);
-            } catch (e) {
-                console.error("[SignalR] start failed", e);
-            }
-        })();
-
-        return () => {
-            canceled = true;
-            if (unsub) unsub();
-        };
-    }, [ensure, on, setUser]);
 
     const handleAccept = useCallback(
         async (handle: string) => {

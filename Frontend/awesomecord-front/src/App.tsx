@@ -11,6 +11,7 @@ import Friends from "./components/Friends/Friends.tsx";
 import {useAuth} from "./hooks/useAuth.ts";
 import {useMemo} from "react";
 import {SignalRRuntime} from "./realtime/signalrRuntime.tsx";
+import {NotificationsListener} from "./realtime/listeners/NotificationsListener.tsx";
 
 function App() {
     const {authenticated} = useAuth();
@@ -28,6 +29,9 @@ function App() {
                 autoConnect={authenticated}
             />
 
+            {authenticated && <NotificationsListener/>}
+
+            
             <Routes>
                 <Route path="/" element={<Navigate to="/chats" replace/>}/>
                 <Route
