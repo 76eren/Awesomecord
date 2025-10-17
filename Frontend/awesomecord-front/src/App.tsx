@@ -10,73 +10,79 @@ import ServerList from "./components/ServerList/ServerList.tsx";
 import Friends from "./components/Friends/Friends.tsx";
 import {useAuth} from "./hooks/useAuth.ts";
 import {useMemo} from "react";
-import {SignalRProvider} from "./realtime/signalrProvider";
+import {SignalRRuntime} from "./realtime/signalrRuntime.tsx";
+import {NotificationsListener} from "./realtime/listeners/NotificationsListener.tsx";
 
 function App() {
     const {authenticated} = useAuth();
 
     const hubs = useMemo(
-        () => [
-            {key: "notifications", path: "hubs/notifications"},
-        ],
+        () => [{key: "notifications", path: "hubs/notifications"}],
         []
     );
 
     return (
         <div className="min-h-screen w-full bg-gray-50">
-            <SignalRProvider baseUrl="https://localhost:5041" hubs={hubs} autoConnect={authenticated}>
-                <Routes>
-                    <Route path="/" element={<Navigate to="/chats" replace/>}/>
-                    <Route
-                        path="/login"
-                        element={
-                            <GuestGuard>
-                                <Login/>
-                            </GuestGuard>
-                        }
-                    />
-                    <Route
-                        path="/register"
-                        element={
-                            <GuestGuard>
-                                <Register/>
-                            </GuestGuard>
-                        }
-                    />
-                    <Route
-                        path="/notifications"
-                        element={
-                            <ProtectedGuard>
-                                <Notifications/>
-                            </ProtectedGuard>
-                        }
-                    />
-                    <Route
-                        path="/chats"
-                        element={
-                            <ProtectedGuard>
-                                <Chats/>
-                            </ProtectedGuard>
-                        }
-                    />
-                    <Route
-                        path="/servers"
-                        element={
-                            <ProtectedGuard>
-                                <ServerList/>
-                            </ProtectedGuard>
-                        }
-                    />
-                    <Route
-                        path="/add-friend"
-                        element={
-                            <ProtectedGuard>
-                                <Friends/>
-                            </ProtectedGuard>
-                        }
-                    />
-                </Routes>
-            </SignalRProvider>
+            <SignalRRuntime
+                baseUrl="https://localhost:5041"
+                hubs={hubs}
+                autoConnect={authenticated}
+            />
+
+            {authenticated && <NotificationsListener/>}
+
+            
+            <Routes>
+                <Route path="/" element={<Navigate to="/chats" replace/>}/>
+                <Route
+                    path="/login"
+                    element={
+                        <GuestGuard>
+                            <Login/>
+                        </GuestGuard>
+                    }
+                />
+                <Route
+                    path="/register"
+                    element={
+                        <GuestGuard>
+                            <Register/>
+                        </GuestGuard>
+                    }
+                />
+                <Route
+                    path="/notifications"
+                    element={
+                        <ProtectedGuard>
+                            <Notifications/>
+                        </ProtectedGuard>
+                    }
+                />
+                <Route
+                    path="/chats"
+                    element={
+                        <ProtectedGuard>
+                            <Chats/>
+                        </ProtectedGuard>
+                    }
+                />
+                <Route
+                    path="/servers"
+                    element={
+                        <ProtectedGuard>
+                            <ServerList/>
+                        </ProtectedGuard>
+                    }
+                />
+                <Route
+                    path="/add-friend"
+                    element={
+                        <ProtectedGuard>
+                            <Friends/>
+                        </ProtectedGuard>
+                    }
+                />
+            </Routes>
         </div>
     );
 }

@@ -4,7 +4,6 @@ import FriendCard from "./FriendCard";
 import type {CreateFriendRequestModel} from "../../Models/friend/createFriendRequest.model.ts";
 import {initiateFriendRequest} from "../../services/friendService.ts";
 import {toast, ToastContainer} from "react-toastify";
-import {useUserContext} from "../../lib/user-context.tsx";
 
 type Friend = {
     id: string;
@@ -71,8 +70,7 @@ export default function Friends() {
             await initiateFriendRequest(model);
             toast.success("Friend successfully!");
             setInput("");
-        }
-        catch (error) {
+        } catch (error) {
             toast.error("Failed to send friend request.");
         }
     }
@@ -82,7 +80,7 @@ export default function Friends() {
         <>
             <ToastContainer/>
             <div className="min-h-screen flex bg-gray-50">
-                <Navbar />
+                <Navbar/>
                 <main className="flex-1 p-6 flex flex-col h-screen max-h-screen">
                     <section>
                         <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-black">

@@ -1,55 +1,30 @@
 import {useCallback, useEffect, useState} from "react";
 import Navbar from "../Navbar/Navbar";
-import {useUserContext} from "../../lib/user-context";
-import type {UserModel} from "../../Models/User/user.model.ts";
 import {toast, ToastContainer} from "react-toastify";
 import {NotificationCard} from "./NotificationCard";
 import {acceptFriendRequest, denyFriendRequest} from "../../services/friendService.ts";
-import {useSignalR} from "../../realtime/signalrProvider.tsx";
+import {useUserStore} from "../../store/userStore";
 
 export default function Notifications() {
-    const {user, isLoading, error, fetchData, updateUser} = useUserContext();
-    const {ensure, on} = useSignalR();
+    const user = useUserStore((s) => s.user);
+    const isLoading = useUserStore((s) => s.isLoading);
+    const error = useUserStore((s) => s.error);
+    const fetchUser = useUserStore((s) => s.fetchUser);
+
     const [processing, setProcessing] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
-        let canceled = false;
-        let unsub: (() => void) | undefined;
-
-        (async () => {
-            try {
-                await ensure("notifications");
-                if (canceled) return;
-
-                const handler = (payload: {
-                    requesterHandle: string;
-                    recipientHandle: string;
-                    updatedUserModel: UserModel;
-                }) => {
-                    console.log(payload)
-                    updateUser(payload.updatedUserModel);
-                    toast.success("New friend request from " + payload.requesterHandle);
-                };
-
-                unsub = on("notifications", "FriendRequestReceived", handler);
-            } catch (e) {
-                console.error("[SignalR] start failed", e);
-            }
-        })();
-
-        return () => {
-            canceled = true;
-            if (unsub) unsub();
-        };
-    }, [ensure, on, updateUser]);
-
+        if (!user && !isLoading) {
+            void fetchUser();
+        }
+    }, [user, isLoading, fetchUser]);
 
     const handleAccept = useCallback(
         async (handle: string) => {
             try {
                 setProcessing((p) => ({...p, [handle]: true}));
                 await acceptFriendRequest(handle);
-                await fetchData();
+                await fetchUser();
                 toast.success(`Accepted ${handle}`);
             } catch (e) {
                 console.error(e);
@@ -58,7 +33,7 @@ export default function Notifications() {
                 setProcessing((p) => ({...p, [handle]: false}));
             }
         },
-        [fetchData]
+        [fetchUser]
     );
 
     const handleDeny = useCallback(
@@ -66,7 +41,7 @@ export default function Notifications() {
             try {
                 setProcessing((p) => ({...p, [handle]: true}));
                 await denyFriendRequest(handle);
-                await fetchData();
+                await fetchUser();
                 toast.success(`Denied ${handle}`);
             } catch (e) {
                 console.error(e);
@@ -75,12 +50,14 @@ export default function Notifications() {
                 setProcessing((p) => ({...p, [handle]: false}));
             }
         },
-        [fetchData]
+        [fetchUser]
     );
 
     if (isLoading) return <h1>Loading</h1>;
     if (error != null) return <h1>An unknown error occured</h1>;
 
+    const incoming = user?.receivedFriendRequests ?? [];
+    const outgoing = user?.sentFriendRequests ?? [];
 
     return (
         <>
@@ -95,16 +72,14 @@ export default function Notifications() {
                             <h2 className="text-sm uppercase tracking-wide text-gray-500">
                                 Incoming requests
                             </h2>
-                            <span className="text-xs text-gray-500">
-                                {user.receivedFriendRequests == undefined ? 0 : user.receivedFriendRequests.length} total
-                            </span>
+                            <span className="text-xs text-gray-500">{incoming.length} total</span>
                         </div>
 
                         <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-200">
-
-                            {user.receivedFriendRequests.length === 0 ? (
-                                <div className="p-4 text-sm text-gray-500">No incoming requests</div>) : (
-                                user.receivedFriendRequests.map((id) => (
+                            {incoming.length === 0 ? (
+                                <div className="p-4 text-sm text-gray-500">No incoming requests</div>
+                            ) : (
+                                incoming.map((id) => (
                                     <NotificationCard
                                         key={id}
                                         isIncoming={true}
@@ -123,15 +98,14 @@ export default function Notifications() {
                             <h2 className="text-sm uppercase tracking-wide text-gray-500">
                                 Outgoing requests
                             </h2>
-                            <span className="text-xs text-gray-500">
-                                {user.sentFriendRequests.length} total
-                            </span>
+                            <span className="text-xs text-gray-500">{outgoing.length} total</span>
                         </div>
 
                         <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-200">
-                            {user.sentFriendRequests.length === 0 ? (
-                                <div className="p-4 text-sm text-gray-500">No outgoing requests</div>) : (
-                                user.sentFriendRequests.map((id) => (
+                            {outgoing.length === 0 ? (
+                                <div className="p-4 text-sm text-gray-500">No outgoing requests</div>
+                            ) : (
+                                outgoing.map((id) => (
                                     <NotificationCard
                                         key={id}
                                         isIncoming={false}
@@ -140,13 +114,10 @@ export default function Notifications() {
                                         onDeny={() => handleDeny(id)}
                                         loading={!!processing[id]}
                                     />
-
                                 ))
                             )}
                         </div>
                     </section>
-
-
                 </main>
             </div>
         </>
