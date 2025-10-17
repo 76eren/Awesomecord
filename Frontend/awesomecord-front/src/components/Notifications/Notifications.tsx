@@ -4,8 +4,8 @@ import type {UserModel} from "../../Models/User/user.model.ts";
 import {toast, ToastContainer} from "react-toastify";
 import {NotificationCard} from "./NotificationCard";
 import {acceptFriendRequest, denyFriendRequest} from "../../services/friendService.ts";
-import {useSignalR} from "../../realtime/signalrProvider.tsx";
 import {useUserStore} from "../../store/userStore";
+import {useSignalRStore} from "../../store/signalrStore.ts";
 
 export default function Notifications() {
     const user = useUserStore((s) => s.user);
@@ -14,7 +14,9 @@ export default function Notifications() {
     const fetchUser = useUserStore((s) => s.fetchUser);
     const setUser = useUserStore((s) => s.setUser);
 
-    const {ensure, on} = useSignalR();
+    const ensure = useSignalRStore((s) => s.ensure);
+    const on = useSignalRStore((s) => s.on);
+
     const [processing, setProcessing] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
@@ -107,9 +109,7 @@ export default function Notifications() {
                             <h2 className="text-sm uppercase tracking-wide text-gray-500">
                                 Incoming requests
                             </h2>
-                            <span className="text-xs text-gray-500">
-                                {incoming.length} total
-                            </span>
+                            <span className="text-xs text-gray-500">{incoming.length} total</span>
                         </div>
 
                         <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-200">
@@ -135,9 +135,7 @@ export default function Notifications() {
                             <h2 className="text-sm uppercase tracking-wide text-gray-500">
                                 Outgoing requests
                             </h2>
-                            <span className="text-xs text-gray-500">
-                                {outgoing.length} total
-                            </span>
+                            <span className="text-xs text-gray-500">{outgoing.length} total</span>
                         </div>
 
                         <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-200">
