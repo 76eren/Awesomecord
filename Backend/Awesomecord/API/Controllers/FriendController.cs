@@ -81,4 +81,24 @@ public class FriendController : BaseApiController
 
         return new OkResult();
     }
+
+    [Authorize]
+    [HttpDelete("{friendIdToDelete}")]
+    public async Task<IActionResult> DeleteFriend(string friendIdToDelete, CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var command = new DeleteFriendCommand(userId, friendIdToDelete);
+        try
+        {
+            await Mediator.Send(command, ct);
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+
+        return new OkResult();
+    }
 }

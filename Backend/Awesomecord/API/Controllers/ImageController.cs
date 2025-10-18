@@ -11,6 +11,8 @@ namespace API.Controllers;
 [ApiController]
 public class ImageController : BaseApiController
 {
+    // Todo: make these endpoints actually REST :/. This is big stupid now
+
     [HttpPost("profile")]
     [RequestSizeLimit(50_000_000)]
     [Authorize]
