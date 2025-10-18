@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Application.Common.Exceptions;
 using Application.CQRS.Images;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,23 +10,6 @@ namespace API.Controllers;
 [ApiController]
 public class ImageController : BaseApiController
 {
-    // Test endpoint for uploading files remove later
-    [HttpPost]
-    [RequestSizeLimit(50_000_000)]
-    public async Task<IActionResult> Upload([FromForm] IFormFile file, CancellationToken ct)
-    {
-        if (file is null || file.Length == 0)
-            return BadRequest("No file uploaded.");
-
-        await using var stream = file.OpenReadStream();
-
-        var url = await Mediator.Send(
-            new UploadImageCommand(file.FileName, file.ContentType, stream),
-            ct);
-
-        return Ok(new { url });
-    }
-
     [HttpPost("profile")]
     [RequestSizeLimit(50_000_000)]
     [Authorize]
@@ -40,7 +24,19 @@ public class ImageController : BaseApiController
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var command = new UploadProfilePictureCommand(file.FileName, file.ContentType, userId, stream);
-        var url = await Mediator.Send(command, ct);
-        return Ok(new { url });
+
+        try
+        {
+            var hash = await Mediator.Send(command, ct);
+            return Ok(new { hash });
+        }
+        catch (UserNotFoundException e)
+        {
+            return NotFound("Please login again.");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 }

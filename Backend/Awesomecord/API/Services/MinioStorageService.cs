@@ -1,4 +1,6 @@
-﻿using Application.Notifications;
+﻿using System.Security.Cryptography;
+using System.Text;
+using Application.Notifications;
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
@@ -59,6 +61,26 @@ public sealed class MinioStorageService : IStorageService
         {
             return false;
         }
+    }
+
+    public async Task<string> ComputeHashAsync(Stream stream, CancellationToken ct = default)
+    {
+        if (stream == null)
+            throw new ArgumentNullException(nameof(stream));
+
+        if (stream.CanSeek) stream.Seek(0, SeekOrigin.Begin);
+
+        using var sha = SHA256.Create();
+        var hash = await sha.ComputeHashAsync(stream, ct);
+
+        if (stream.CanSeek)
+            stream.Seek(0, SeekOrigin.Begin);
+
+        var sb = new StringBuilder();
+        foreach (var b in hash)
+            sb.Append(b.ToString("x2"));
+
+        return sb.ToString();
     }
 
     private async Task EnsureBucketAsync(CancellationToken ct)

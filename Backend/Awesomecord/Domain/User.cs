@@ -11,38 +11,35 @@ public class User
     public string Email { get; private set; } = default!;
     public string Phone { get; private set; } = default!;
     public string PasswordHash { get; set; } = default!;
-    
+    public string? ProfilePictureHash { get; set; }
+
     public virtual ICollection<Friendship> Friends { get; private set; } = new List<Friendship>();
-    
+
     public virtual ICollection<FriendRequest> SentFriendRequests { get; private set; } = new List<FriendRequest>();
     public virtual ICollection<FriendRequest> ReceivedFriendRequests { get; private set; } = new List<FriendRequest>();
-    
-    // Todo: add logic for profile pictures
-    // ...
-    
-    public User() { }
-    
+
     public static User Create(
-        string displayName, 
-        string userHandle, 
+        string displayName,
+        string userHandle,
         string bio,
-        string firstName, 
-        string lastName, 
-        string email, 
+        string firstName,
+        string lastName,
+        string email,
         string phone,
         string passwordHash
-        )
+    )
     {
         return new User
         {
-            DisplayName  = displayName,
-            UserHandle   = userHandle,
-            Bio          = bio,
-            FirstName    = firstName,
-            LastName     = lastName,
-            Email        = email,
-            Phone        = phone,
-            PasswordHash = passwordHash
+            DisplayName = displayName,
+            UserHandle = userHandle,
+            Bio = bio,
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            Phone = phone,
+            PasswordHash = passwordHash,
+            ProfilePictureHash = null
         };
     }
 }
