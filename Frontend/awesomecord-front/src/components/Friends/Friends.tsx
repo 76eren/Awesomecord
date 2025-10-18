@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useEffect} from "react";
 import Navbar from "../Navbar/Navbar.tsx";
 import FriendCard from "./FriendCard";
 import type {CreateFriendRequestModel} from "../../Models/friend/createFriendRequest.model.ts";
 import {initiateFriendRequest} from "../../services/friendService.ts";
 import {toast, ToastContainer} from "react-toastify";
+import {useUserStore} from "../../store/userStore.ts";
 
 type Friend = {
     id: string;
@@ -14,39 +15,17 @@ type Friend = {
 };
 
 export default function Friends() {
+    const user = useUserStore((s) => s.user);
+    const isLoading = useUserStore((s) => s.isLoading);
+    const error = useUserStore((s) => s.error);
+    const fetchUser = useUserStore((s) => s.fetchUser);
 
-    // Mock data to be loaded dynamically later
-    const mockFriends: Friend[] = [
-        {
-            id: "1",
-            userhandle: "@johnny",
-            displayName: "Johnny Silver",
-            avatar: "https://w7.pngwing.com/pngs/223/244/png-transparent-computer-icons-avatar-user-profile-avatar-heroes-rectangle-black-thumbnail.png",
-            bio: "Keyboard warrior. Coffee enthusiast.",
-        },
-        {
-            id: "2",
-            userhandle: "@sara",
-            displayName: "Sara Frost",
-            avatar: "https://w7.pngwing.com/pngs/223/244/png-transparent-computer-icons-avatar-user-profile-avatar-heroes-rectangle-black-thumbnail.png",
-            bio: "Loves TypeScript and climbing.",
-        },
-        {
-            id: "3",
-            userhandle: "@marston",
-            displayName: "John Marston",
-            avatar:
-                "https://w7.pngwing.com/pngs/223/244/png-transparent-computer-icons-avatar-user-profile-avatar-heroes-rectangle-black-thumbnail.png",
-            bio: "Outlaw turned rancher.",
-        },
-        {
-            id: "4",
-            userhandle: "@pixelpete",
-            displayName: "Pixel Pete",
-            avatar: "https://w7.pngwing.com/pngs/223/244/png-transparent-computer-icons-avatar-user-profile-avatar-heroes-rectangle-black-thumbnail.png",
-            bio: "Game dev, midnight commits.",
+    useEffect(() => {
+        if (!user && !isLoading) {
+            void fetchUser();
         }
-    ];
+    }, [user, isLoading, fetchUser]);
+
 
     const handleMessage = (friend: Friend) => () => {
         alert(`Start chat with ${friend.displayName}`);
@@ -56,7 +35,6 @@ export default function Friends() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value ?? "");
     };
-
 
     async function sendFriendRequest(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -75,6 +53,10 @@ export default function Friends() {
         }
     }
 
+    if (isLoading) return <h1 className="text-center mt-20 text-lg font-medium">Loading...</h1>;
+    if (error != null) return <h1 className="text-center mt-20 text-lg font-medium text-red-600">An unknown error
+        occurred.</h1>;
+    if (user == null) return <h1 className="text-center mt-20 text-lg font-medium">Loading...</h1>;
 
     return (
         <>
@@ -117,14 +99,10 @@ export default function Friends() {
                             className="flex-1 overflow-y-auto rounded-lg border border-gray-200 dark:border-neutral-800
                        bg-white divide-y divide-gray-200 dark:divide-neutral-800"
                         >
-                            {mockFriends.map((f) => (
+                            {user.friends.map((friendId) => (
                                 <FriendCard
-                                    key={f.id}
-                                    userhandle={f.userhandle}
-                                    displayName={f.displayName}
-                                    avatar={f.avatar}
-                                    bio={f.bio}
-                                    onMessage={handleMessage(f)}
+                                    key={friendId}
+                                    friendId={friendId}
                                 />
                             ))}
                         </div>

@@ -9,4 +9,5 @@ export interface UserModel {
     phone: string;
     sentFriendRequests: string[];
     receivedFriendRequests: string[];
+    friends: string[];
 }

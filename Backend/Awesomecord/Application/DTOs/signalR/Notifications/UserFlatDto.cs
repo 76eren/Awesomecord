@@ -15,7 +15,7 @@ public class UserFlatDto
     public string Email { get; init; } = default!;
     public string Phone { get; init; } = default!;
 
-    public List<string> FriendsIds { get; private set; } = new();
+    public List<string> Friends { get; private set; } = new();
     public List<string> SentFriendRequests { get; private set; } = new();
     public List<string> ReceivedFriendRequests { get; private set; } = new();
 
@@ -32,7 +32,7 @@ public class UserFlatDto
             LastName = user.LastName,
             Email = user.Email,
             Phone = user.Phone,
-            FriendsIds = user.Friends.Select(f => f.FriendId).ToList(),
+            Friends = user.Friends.Select(f => f.FriendId).ToList(),
             SentFriendRequests = user.SentFriendRequests.Select(r => r.RecipientId).ToList(),
             ReceivedFriendRequests = user.ReceivedFriendRequests.Select(r => r.RequesterId).ToList()
         };
