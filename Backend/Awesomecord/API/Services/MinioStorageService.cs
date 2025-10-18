@@ -83,6 +83,47 @@ public sealed class MinioStorageService : IStorageService
         return sb.ToString();
     }
 
+    public async Task<string[]> ListFilesAsync(string directory, CancellationToken cancellationToken)
+    {
+        var results = new List<string>();
+
+        var listArgs = new ListObjectsArgs()
+            .WithBucket(_options.Bucket)
+            .WithPrefix(directory ?? string.Empty)
+            .WithRecursive(true);
+
+        var observable = _client.ListObjectsEnumAsync(listArgs, cancellationToken);
+
+        await foreach (var item in observable.WithCancellation(cancellationToken)) results.Add(item.Key);
+
+        return results.ToArray();
+    }
+
+    public async Task<byte[]?> DownloadAsync(object fileName, CancellationToken cancellationToken)
+    {
+        if (fileName == null)
+            throw new ArgumentNullException(nameof(fileName));
+
+        await EnsureBucketAsync(cancellationToken);
+
+        using var memoryStream = new MemoryStream();
+
+        var getObjectArgs = new GetObjectArgs()
+            .WithBucket(_options.Bucket)
+            .WithObject(fileName.ToString()!)
+            .WithCallbackStream(stream => stream.CopyTo(memoryStream));
+
+        try
+        {
+            await _client.GetObjectAsync(getObjectArgs, cancellationToken);
+            return memoryStream.ToArray();
+        }
+        catch (ObjectNotFoundException)
+        {
+            return null;
+        }
+    }
+
     private async Task EnsureBucketAsync(CancellationToken ct)
     {
         var exists = await _client.BucketExistsAsync(

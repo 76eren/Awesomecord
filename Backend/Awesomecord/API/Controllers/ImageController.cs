@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Common.Exceptions;
 using Application.CQRS.Images;
+using Application.CQRS.Images.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,5 +39,23 @@ public class ImageController : BaseApiController
         {
             return StatusCode(500, ex.Message);
         }
+    }
+
+    [HttpGet("profile")]
+    [Authorize]
+    public async Task<IActionResult> GetProfilePicture([FromQuery] string? userId, [FromQuery] string? userHandle,
+        CancellationToken ct)
+    {
+        var user = userId ?? userHandle;
+
+        if (string.IsNullOrEmpty(user))
+            return BadRequest("Either userId or userHandle must be provided.");
+
+        var image = await Mediator.Send(new GetProfilePicture.Query(user), ct);
+
+        if (image is null || image.Length == 0)
+            return NotFound("Profile picture not found.");
+
+        return File(image, "image/png");
     }
 }
