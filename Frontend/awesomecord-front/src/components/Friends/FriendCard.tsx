@@ -41,7 +41,7 @@ export default function FriendCard(props: FriendCardProps) {
                 <div className="min-w-0">
                     <div className="flex items-baseline gap-2">
                         <span className="font-medium truncate">{friend.displayName}</span>
-                        <span className="text-xs text-gray-500 truncate">{friend.displayName}</span>
+                        <span className="text-xs text-gray-500 truncate">@{friend.userHandle}</span>
                     </div>
                     {friend.bio ? (
                         <p className="text-sm text-gray-500 truncate">{friend.bio}</p>
