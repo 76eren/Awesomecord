@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.DTOs.Notifications;
 using Application.Notifications;
+using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
@@ -30,13 +31,16 @@ public sealed class DeleteFriendHandler(AppDbContext db, INotificationsPublisher
 
         await db.SaveChangesAsync(cancellationToken);
 
-        // Notify both parties about the friend removal
-        // This is super horrible to do it this way
+        await NotifyFriendDeletion(user, friend, cancellationToken);
+
+        return Unit.Value;
+    }
+
+    private async Task NotifyFriendDeletion(User user, User friend, CancellationToken cancellationToken)
+    {
         var updatedUserADto = UserFlatDto.FromUser(user);
         var payloadUserA = new FriendRequestReceivedPayload<UserFlatDto>
         {
-            RequesterHandle = user.UserHandle,
-            RecipientHandle = friend.UserHandle,
             UpdatedUserModel = updatedUserADto
         };
         await notifier.FriendRequestReceivedAsync(user.Id, payloadUserA, cancellationToken);
@@ -44,12 +48,8 @@ public sealed class DeleteFriendHandler(AppDbContext db, INotificationsPublisher
         var updatedUserBDto = UserFlatDto.FromUser(friend);
         var payloadUserB = new FriendRequestReceivedPayload<UserFlatDto>
         {
-            RequesterHandle = friend.UserHandle,
-            RecipientHandle = user.UserHandle,
             UpdatedUserModel = updatedUserBDto
         };
         await notifier.FriendRequestReceivedAsync(friend.Id, payloadUserB, cancellationToken);
-
-        return Unit.Value;
     }
 }
