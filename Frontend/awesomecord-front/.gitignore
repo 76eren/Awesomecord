@@ -25,3 +25,5 @@ dist-ssr
 
 .cert/localhost.pem
 .cert/localhost-key.pem
+
+.env
