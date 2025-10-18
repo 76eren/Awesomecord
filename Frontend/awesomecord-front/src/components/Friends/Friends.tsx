@@ -96,14 +96,9 @@ export default function Friends() {
                         </h2>
 
                         <div
-                            className="flex-1 overflow-y-auto rounded-lg border border-gray-200 dark:border-neutral-800
-                       bg-white divide-y divide-gray-200 dark:divide-neutral-800"
-                        >
+                            className="overflow-y-auto max-h-[75vh] rounded-lg border border-gray-200 dark:border-neutral-800 bg-white divide-y divide-gray-200 dark:divide-neutral-800">
                             {user.friends.map((friendId) => (
-                                <FriendCard
-                                    key={friendId}
-                                    friendId={friendId}
-                                />
+                                <FriendCard key={friendId} friendId={friendId}/>
                             ))}
                         </div>
                     </section>
