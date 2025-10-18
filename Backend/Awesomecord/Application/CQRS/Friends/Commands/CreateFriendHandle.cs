@@ -25,6 +25,10 @@ public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper, INotific
             fr.RequesterId == sender.Id && fr.RecipientId == receiver.Id, cancellationToken);
         if (existingRequest is not null) throw new FriendRequestAlreadyExistsException();
 
+        // Check if already friends, one way is enough since friendship is mutual
+        var friendsOfSender = sender.Friends;
+        if (friendsOfSender.Any(f => f.FriendId == receiver.Id)) throw new AlreadyFriendsException();
+
         var friendRequest = FriendRequest.Create(sender.Id, receiver.Id);
         db.Set<FriendRequest>().Add(friendRequest);
 

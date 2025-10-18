@@ -41,6 +41,10 @@ public class FriendController : BaseApiController
         {
             return BadRequest("Friend request has already been made.");
         }
+        catch (AlreadyFriendsException ex)
+        {
+            return BadRequest("Cannot send friend request to an existing friend.");
+        }
 
         return new OkResult();
     }
