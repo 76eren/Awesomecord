@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import type {LimitedUserModel} from "../../Models/User/limitedUser.model.ts";
-import {getUserById} from "../../services/userService.ts";
+import {getProfilePictureUrlByUserId, getUserById} from "../../services/userService.ts";
 
 type NotificationCardProps = {
     userId: string;
@@ -19,7 +19,6 @@ export function NotificationCard({
                                  }: NotificationCardProps) {
     const [user, setUser] = useState<LimitedUserModel | null>(null);
     const [isFetching, setIsFetching] = useState(true);
-    const avatar = "https://w7.pngwing.com/pngs/223/244/png-transparent-computer-icons-avatar-user-profile-avatar-heroes-rectangle-black-thumbnail.png" // temporary placeholder
 
     useEffect(() => {
         let mounted = true;
@@ -52,7 +51,7 @@ export function NotificationCard({
             <div className="flex items-center gap-3 min-w-0">
                 <div className="relative h-12 w-12 shrink-0">
                     <img
-                        src={avatar}
+                        src={getProfilePictureUrlByUserId(userId)}
                         alt={`${user?.displayName ?? "User"} avatar`}
                         className="h-12 w-12 rounded-full object-cover ring-1 ring-black/5"
                     />
