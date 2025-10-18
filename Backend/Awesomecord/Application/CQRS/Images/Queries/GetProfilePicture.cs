@@ -27,14 +27,15 @@ public class GetProfilePicture
                 user = await context.Users.FirstOrDefaultAsync(u => u.UserHandle == request.User, cancellationToken);
             }
 
-            if (user == null || string.IsNullOrEmpty(user.ProfilePictureHash))
-                return null;
+            if (user == null) return null;
 
+            // This means a profile picture needs to be seeded to min/io, maybe put this in the frontend instead?
+            if (user.ProfilePictureHash == null)
+                return await storage.DownloadAsync("users/default-profile.jpg", cancellationToken);
+            
             var directory = "users/" + user.Id + "/profile-picture/";
             var files = await storage.ListFilesAsync(directory, cancellationToken);
             var fileName = files.FirstOrDefault(f => f.Contains(user.ProfilePictureHash));
-            if (fileName == null)
-                return null; // TODO: return the default profile picture
 
             return await storage.DownloadAsync(fileName, cancellationToken);
         }
