@@ -108,7 +108,7 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<NotificationsHub>("/hubs/notifications").RequireCors("AllowFrontend");
+app.MapHub<UpdateOwnUserHub>("/hubs/userupdates").RequireCors("AllowFrontend");
 
 app.MapControllers();
 

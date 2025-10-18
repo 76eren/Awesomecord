@@ -18,7 +18,7 @@ function App() {
     const {authenticated} = useAuth();
 
     const hubs = useMemo(
-        () => [{key: "notifications", path: "hubs/notifications"}],
+        () => [{key: "userupdates", path: "hubs/userupdates"}],
         []
     );
 

@@ -8,9 +8,9 @@ namespace API.Services;
 
 public class SignalRNotificationsPublisher : INotificationsPublisher
 {
-    private readonly IHubContext<NotificationsHub> _hub;
+    private readonly IHubContext<UpdateOwnUserHub> _hub;
 
-    public SignalRNotificationsPublisher(IHubContext<NotificationsHub> hub)
+    public SignalRNotificationsPublisher(IHubContext<UpdateOwnUserHub> hub)
     {
         _hub = hub;
     }
@@ -21,6 +21,6 @@ public class SignalRNotificationsPublisher : INotificationsPublisher
         CancellationToken ct = default)
     {
         return _hub.Clients.User(recipientUserId)
-            .SendAsync("FriendRequestReceived", payload, ct);
+            .SendAsync("UserUpdate", payload, ct);
     }
 }
