@@ -36,17 +36,18 @@ public sealed class CreateFriendHandle(AppDbContext db, IMapper mapper, INotific
 
         var freshRecipient = await db.Users.FirstAsync(u => u.Id == receiver.Id, cancellationToken);
 
-        var updatedRecipientDto = UserFlatDto.FromUser(freshRecipient);
-
-        var payload = new FriendRequestReceivedPayload<UserFlatDto>
-        {
-            RequesterHandle = sender.UserHandle,
-            RecipientHandle = receiver.UserHandle,
-            UpdatedUserModel = updatedRecipientDto
-        };
-
-        await notifier.FriendRequestReceivedAsync(receiver.Id, payload, cancellationToken);
+        await notify(freshRecipient, receiver, cancellationToken);
 
         return new FriendRequestDto(request.SenderHandle, request.ReceiverHandle);
+    }
+
+    private async Task notify(User freshRecipient, User receiver, CancellationToken cancellationToken)
+    {
+        var updatedRecipientDto = UserFlatDto.FromUser(freshRecipient);
+        var payload = new FriendRequestReceivedPayload<UserFlatDto>
+        {
+            UpdatedUserModel = updatedRecipientDto
+        };
+        await notifier.FriendRequestReceivedAsync(receiver.Id, payload, cancellationToken);
     }
 }

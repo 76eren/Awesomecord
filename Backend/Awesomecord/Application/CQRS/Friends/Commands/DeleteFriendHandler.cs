@@ -1,10 +1,15 @@
-﻿using MediatR;
+﻿using Application.DTOs;
+using Application.DTOs.Notifications;
+using Application.Notifications;
+using Domain;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class DeleteFriendHandler(AppDbContext db) : IRequestHandler<DeleteFriendCommand, Unit>
+public sealed class DeleteFriendHandler(AppDbContext db, INotificationsPublisher notifier)
+    : IRequestHandler<DeleteFriendCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteFriendCommand request, CancellationToken cancellationToken)
     {
@@ -25,6 +30,26 @@ public sealed class DeleteFriendHandler(AppDbContext db) : IRequestHandler<Delet
         db.Friendships.Remove(FriendshipB);
 
         await db.SaveChangesAsync(cancellationToken);
+
+        await NotifyFriendDeletion(user, friend, cancellationToken);
+
         return Unit.Value;
+    }
+
+    private async Task NotifyFriendDeletion(User user, User friend, CancellationToken cancellationToken)
+    {
+        var updatedUserADto = UserFlatDto.FromUser(user);
+        var payloadUserA = new FriendRequestReceivedPayload<UserFlatDto>
+        {
+            UpdatedUserModel = updatedUserADto
+        };
+        await notifier.FriendRequestReceivedAsync(user.Id, payloadUserA, cancellationToken);
+
+        var updatedUserBDto = UserFlatDto.FromUser(friend);
+        var payloadUserB = new FriendRequestReceivedPayload<UserFlatDto>
+        {
+            UpdatedUserModel = updatedUserBDto
+        };
+        await notifier.FriendRequestReceivedAsync(friend.Id, payloadUserB, cancellationToken);
     }
 }
