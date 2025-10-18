@@ -19,6 +19,7 @@ public sealed class ApiMappingProfile : Profile
                 opt => opt.MapFrom(src =>
                     src.ReceivedFriendRequests.Select(r => r.Requester.Id)));
 
-        CreateMap<UserDto, GetUserResponseNoSensitiveDataResponse>();
+        CreateMap<UserDto, GetUserResponseNoSensitiveDataResponse>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
     }
 }

@@ -3,7 +3,7 @@ import type {UserModel} from "../../Models/User/user.model.ts";
 import {useUserStore} from "../../store/userStore.ts";
 import {useSignalRStore} from "../../store/signalrStore.ts";
 
-export function NotificationsListener() {
+export function UserUpdatesListener() {
     const setUser = useUserStore((s) => s.setUser);
     const ensure = useSignalRStore((s) => s.ensure);
     const on = useSignalRStore((s) => s.on);

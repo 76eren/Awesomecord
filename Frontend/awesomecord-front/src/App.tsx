@@ -10,7 +10,7 @@ import ServerList from "./components/ServerList/ServerList.tsx";
 import Friends from "./components/Friends/Friends.tsx";
 import {useAuth} from "./hooks/useAuth.ts";
 import {useMemo} from "react";
-import {NotificationsListener} from "./realtime/listeners/NotificationsListener.tsx";
+import {UserUpdatesListener} from "./realtime/listeners/UserUpdatesListener.tsx";
 import Profile from "./components/Profile/profile.tsx";
 import {SignalRRuntime} from "./realtime/signalrRuntime.tsx";
 
@@ -29,7 +29,7 @@ function App() {
                 hubs={hubs}
                 autoConnect={authenticated}
             />
-            {authenticated && <NotificationsListener/>}
+            {authenticated && <UserUpdatesListener/>}
 
             <Routes>
                 <Route path="/" element={<Navigate to="/chats" replace/>}/>
