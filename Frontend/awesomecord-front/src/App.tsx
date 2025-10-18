@@ -11,6 +11,7 @@ import Friends from "./components/Friends/Friends.tsx";
 import {useAuth} from "./hooks/useAuth.ts";
 import {useMemo} from "react";
 import {SignalRProvider} from "./realtime/signalrProvider";
+import Profile from "./components/Profile/profile.tsx";
 
 function App() {
     const {authenticated} = useAuth();
@@ -72,6 +73,15 @@ function App() {
                         element={
                             <ProtectedGuard>
                                 <Friends/>
+                            </ProtectedGuard>
+                        }
+                    />
+
+                    <Route
+                        path="/profile"
+                        element={
+                            <ProtectedGuard>
+                                <Profile/>
                             </ProtectedGuard>
                         }
                     />
