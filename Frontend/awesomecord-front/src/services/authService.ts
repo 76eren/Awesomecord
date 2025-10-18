@@ -20,6 +20,7 @@ export async function logout() {
     return apiFetch<void>("auth/logout", {method: "POST"});
 }
 
+// Todo: get rid of this the me endpoint already does that
 export async function isAuthenticated() {
     return apiFetch<void>("auth/authenticated", {method: "GET"});
 }
