@@ -1,7 +1,7 @@
-import { NavLink } from "react-router-dom";
-import { Bell, MessageSquare, Server as ServerIcon, LogOut, ContactRound } from "lucide-react";
+import {NavLink} from "react-router-dom";
+import {Bell, ContactRound, LogOut, MessageSquare, Server as ServerIcon, UserIcon} from "lucide-react";
 import * as React from "react";
-import { logout } from "../../services/authService";
+import {logout} from "../../services/authService";
 
 type NavItem = {
     to: string;
@@ -11,14 +11,15 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-    { to: "/notifications", label: "Notifications", icon: <Bell className="h-5 w-5" /> },
-    { to: "/chats", label: "Chats", icon: <MessageSquare className="h-5 w-5" /> },
-    { to: "/servers", label: "Servers", icon: <ServerIcon className="h-5 w-5" /> },
-    { to: "/add-friend", label: "Friends", icon: <ContactRound className="h-5 w-5" /> },
+    {to: "/notifications", label: "Notifications", icon: <Bell className="h-5 w-5"/>},
+    {to: "/chats", label: "Chats", icon: <MessageSquare className="h-5 w-5"/>},
+    {to: "/servers", label: "Servers", icon: <ServerIcon className="h-5 w-5"/>},
+    {to: "/add-friend", label: "Friends", icon: <ContactRound className="h-5 w-5"/>},
+    {to: "/profile", label: "Profile", icon: <UserIcon className="h-5 w-5"/>},
     {
         to: "#",
         label: "Logout",
-        icon: <LogOut className="h-5 w-5" />,
+        icon: <LogOut className="h-5 w-5"/>,
         onClick: () => logout().then(() => {
             window.location.href = "/login";
         }),
@@ -70,7 +71,7 @@ export default function Navbar() {
 
         window.addEventListener("mousemove", onMove as any);
         window.addEventListener("mouseup", onUp);
-        window.addEventListener("touchmove", onMove as any, { passive: false });
+        window.addEventListener("touchmove", onMove as any, {passive: false});
         window.addEventListener("touchend", onUp);
         window.addEventListener("touchcancel", onUp);
     };
@@ -82,7 +83,7 @@ export default function Navbar() {
 
     return (
         <aside
-            style={{ ["--sidebar-width" as any]: `${width}px` }}
+            style={{["--sidebar-width" as any]: `${width}px`}}
             className="
         md:sticky md:top-0 md:h-screen bg-white border-r md:border-gray-700
         fixed bottom-0 w-full border-t border-gray-700 md:border-t-0 z-50
@@ -101,7 +102,7 @@ export default function Navbar() {
                             <NavLink
                                 to={item.to}
                                 onClick={item.onClick}
-                                className={({ isActive }) =>
+                                className={({isActive}) =>
                                     [
                                         "group flex md:items-center justify-center md:justify-start gap-3 px-2 md:px-4 py-2.5 mx-0 md:mx-2 rounded-xl transition flex-col md:flex-row items-center",
                                         isActive && !item.onClick ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100",
@@ -129,16 +130,16 @@ export default function Navbar() {
                     startDrag(x);
                 }}
 
-                style={{ position: "absolute" }}
+                style={{position: "absolute"}}
             >
-                <div className="absolute inset-y-0 -left-1 w-2" />
-                <div className="absolute inset-y-0 left-0 w-px bg-gray-200" />
+                <div className="absolute inset-y-0 -left-1 w-2"/>
+                <div className="absolute inset-y-0 left-0 w-px bg-gray-200"/>
             </div>
 
             {dragging && (
                 <div
                     className="hidden md:block fixed inset-0 cursor-col-resize"
-                    style={{ zIndex: 60 }}
+                    style={{zIndex: 60}}
                     onTouchMove={(e) => e.preventDefault()}
                 />
             )}

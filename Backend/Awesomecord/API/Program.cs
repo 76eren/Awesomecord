@@ -5,13 +5,14 @@ using API.Hubs;
 using API.Services;
 using Application.CQRS.Users.Commands;
 using Application.Notifications;
+using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Persistence;
-using DotNetEnv;
-using Microsoft.AspNetCore.SignalR;
+using Persistence.storage;
 
 Env.Load();
 
@@ -94,7 +95,10 @@ builder.Services
     });
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 builder.Services.AddScoped<INotificationsPublisher, SignalRNotificationsPublisher>();
-
+builder.Services.AddSingleton<IStorageService, MinioStorageService>();
+builder.Services.Configure<StorageOptions>(
+    builder.Configuration.GetSection(StorageOptions.SectionName)
+);
 
 var app = builder.Build();
 

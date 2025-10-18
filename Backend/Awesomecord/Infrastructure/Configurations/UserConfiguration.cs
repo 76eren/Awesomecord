@@ -1,8 +1,8 @@
 ﻿using Domain;
-
-namespace Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Persistence.Configurations;
 
 public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
@@ -19,5 +19,6 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.HasIndex(x => x.UserHandle).IsUnique();
         b.HasIndex(x => x.Email).IsUnique();
         b.Property(x => x.Bio).HasMaxLength(150);
+        b.Property(x => x.PasswordHash).ValueGeneratedNever();
     }
 }
