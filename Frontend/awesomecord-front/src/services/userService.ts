@@ -13,3 +13,13 @@ export function getProfilePictureUrlByUserId(id: string): string {
 export function getCoverPictureUrlByUserHandle(handle: string): string {
     return API_BASE_URL + "image/cover/?userHandle=" + handle;
 }
+
+export function setProfilePicture(file: File): Promise<void> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiFetch<void>("image/profile", {
+        method: "POST",
+        body: formData
+    });
+}
