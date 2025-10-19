@@ -7,6 +7,7 @@ type NotificationCardProps = {
     isIncoming: boolean;
     onAccept: () => Promise<void> | void;
     onDeny: () => Promise<void> | void;
+    onCancel: () => Promise<void> | void;
     loading?: boolean;
 };
 
@@ -14,6 +15,7 @@ export function NotificationCard({
                                      userId,
                                      onAccept,
                                      onDeny,
+                                     onCancel,
                                      loading = false,
                                      isIncoming = false
                                  }: NotificationCardProps) {
@@ -100,6 +102,7 @@ export function NotificationCard({
                     <button
                         type="button"
                         disabled={loading}
+                        onClick={onCancel}
                         className="rounded-md border border-transparent bg-gray-900 text-white px-3 py-1.5 text-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black/20 disabled:opacity-60 disabled:cursor-not-allowed"
                         aria-label={`Accept request from ${user?.displayName ?? ""}`}>
                         <span className="inline-flex items-center gap-2">
