@@ -169,8 +169,9 @@ export default function Profile() {
             </main>
 
             {showCropper && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center z-50">
-                    <div className="relative w-80 h-80 bg-black">
+                <div
+                    className="fixed inset-0 bg-black/30 backdrop-blur-sm flex flex-col justify-center items-center z-50">
+                    <div className="relative w-80 h-80 bg-transparent rounded-lg overflow-hidden">
                         <Cropper
                             image={imageSrc || ""}
                             crop={crop}
