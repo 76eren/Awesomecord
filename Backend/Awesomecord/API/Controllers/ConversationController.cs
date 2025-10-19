@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
+using API.Contracts.Conversation;
 using Application.CQRS.Conversations.Command;
+using Application.CQRS.Conversations.Query;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,5 +28,17 @@ public class ConversationController : BaseApiController
         {
             return BadRequest(e.Message);
         }
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult<List<GetConversationContract>>> GetConversations(CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var result = await Mediator.Send(new GetConversations.Query { User = userId }, ct);
+        var toReturn = Mapper.Map<List<GetConversationContract>>(result);
+        return toReturn;
     }
 }

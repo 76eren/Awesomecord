@@ -22,7 +22,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="CQRS\Conversations\Query\"/>
         <Folder Include="DTOs\signalR\"/>
     </ItemGroup>
 
