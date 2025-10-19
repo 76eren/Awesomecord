@@ -22,6 +22,13 @@ export async function denyFriendRequest(requesterHandle: string) {
     return apiFetch<void>("friend/" + requesterHandle, {method: "POST", json: body, headers: headers});
 }
 
+export async function cancelFriendRequest(requesterHandle: string) {
+    let body = {
+        "Action": "cancel"
+    }
+    return apiFetch<void>("friend/" + requesterHandle, {method: "POST", json: body});
+}
+
 export async function deleteFriendFromFriendslist(friendId: string) {
     return apiFetch<void>("friend/" + friendId, {method: "DELETE"});
 }

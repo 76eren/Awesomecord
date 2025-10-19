@@ -1,6 +1,5 @@
 ﻿using Application.Common.Exceptions;
 using Application.DTOs;
-using AutoMapper;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,73 +7,98 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class HandleFriendRequestHandler(AppDbContext db, IMapper mapper)
+public sealed class HandleFriendRequestHandler(AppDbContext db)
     : IRequestHandler<HandleFriendRequestCommand, FriendRequestDto>
 {
     public async Task<FriendRequestDto> Handle(HandleFriendRequestCommand request, CancellationToken ct)
     {
-        var userThatIsAcceptingOrDenying =
-            await db.Users.SingleOrDefaultAsync(u => u.Id == request.UserThatIsAcceptingOrDenying, ct);
-        var userThatIsRequesting =
-            await db.Users.SingleOrDefaultAsync(u => u.Id == request.UserThatIsRequesting, ct);
+        var recipientId = request.RecipientId;
+        var requesterId = request.RequesterId;
 
-        if (userThatIsAcceptingOrDenying is null || userThatIsRequesting is null)
-            throw new Exception("Sender or receiver not found.");
+        var recipientExists = await db.Users.AnyAsync(u => u.Id == recipientId, ct);
+        var requesterExists = await db.Users.AnyAsync(u => u.Id == requesterId, ct);
+        if (!recipientExists || !requesterExists)
+            throw new UserNotFoundException();
 
-        var allFriendRequestsByAcceptingParty =
-            userThatIsAcceptingOrDenying.ReceivedFriendRequests;
-        FriendRequest friendRequest = null;
-        foreach (var i in allFriendRequestsByAcceptingParty)
-            if (i.RecipientId == userThatIsAcceptingOrDenying.Id)
-            {
-                friendRequest = i;
-                break;
-            }
+        var action = request.Action?.Trim().ToLowerInvariant();
 
-        if (friendRequest == null) throw new FriendRequestNotFoundException();
+        // Forward: requester -> recipient
+        var forwardReq = await db.FriendRequests
+            .SingleOrDefaultAsync(fr => fr.RequesterId == requesterId && fr.RecipientId == recipientId, ct);
 
-        var action = request.Action?.ToLowerInvariant();
-        if (action is not ("accept" or "deny"))
-            throw new ArgumentOutOfRangeException(nameof(request.Action), "Action must be 'accept' or 'deny'.");
+        // Reverse: recipient -> requester
+        var reverseReq = await db.FriendRequests
+            .SingleOrDefaultAsync(fr => fr.RequesterId == recipientId && fr.RecipientId == requesterId, ct);
 
-        var tx = await db.Database.BeginTransactionAsync(ct);
-
-        if (action == "accept")
-        {
-            var alreadyAB = await db.Set<Friendship>()
-                .AnyAsync(f => f.UserId == userThatIsAcceptingOrDenying.Id && f.FriendId == userThatIsRequesting.Id,
-                    ct);
-            var alreadyBA = await db.Set<Friendship>()
-                .AnyAsync(f => f.UserId == userThatIsRequesting.Id && f.FriendId == userThatIsAcceptingOrDenying.Id,
-                    ct);
-
-            if (!alreadyAB)
-                db.Set<Friendship>().Add(Friendship.Create(userThatIsAcceptingOrDenying.Id, userThatIsRequesting.Id));
-
-            if (!alreadyBA)
-                db.Set<Friendship>().Add(Friendship.Create(userThatIsRequesting.Id, userThatIsAcceptingOrDenying.Id));
-
-            var reverseReq = await db.FriendRequests
-                .SingleOrDefaultAsync(
-                    fr => fr.RequesterId == userThatIsRequesting.Id &&
-                          fr.RecipientId == userThatIsAcceptingOrDenying.Id, ct);
-
-            if (reverseReq is not null) db.Set<FriendRequest>().Remove(reverseReq);
-        }
-
-        db.Set<FriendRequest>().Remove(friendRequest);
-
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
         try
         {
-            await db.SaveChangesAsync(ct);
-            await tx.CommitAsync(ct);
+            switch (action)
+            {
+                case "accept":
+                {
+                    // Accept whichever request exists; if both exist, auto-friend and clear both.
+                    if (forwardReq is null && reverseReq is null)
+                        throw new FriendRequestNotFoundException();
+
+                    await EnsureFriendshipAsync(recipientId, requesterId, ct);
+
+                    if (forwardReq is not null) db.FriendRequests.Remove(forwardReq);
+                    if (reverseReq is not null) db.FriendRequests.Remove(reverseReq);
+
+                    await db.SaveChangesAsync(ct);
+                    await tx.CommitAsync(ct);
+                    return new FriendRequestDto(recipientId, requesterId);
+                }
+
+                case "deny":
+                {
+                    // Deny removes the pending request(s) without creating friendship.
+                    if (forwardReq is null && reverseReq is null)
+                        throw new FriendRequestNotFoundException();
+
+                    if (forwardReq is not null) db.FriendRequests.Remove(forwardReq);
+                    if (reverseReq is not null) db.FriendRequests.Remove(reverseReq);
+
+                    await db.SaveChangesAsync(ct);
+                    await tx.CommitAsync(ct);
+                    return new FriendRequestDto(recipientId, requesterId);
+                }
+
+                case "cancel":
+                {
+                    // Only the sender can cancel their own outgoing request.
+                    if (forwardReq is null)
+                        throw new FriendRequestNotFoundException();
+
+                    db.FriendRequests.Remove(forwardReq);
+
+                    await db.SaveChangesAsync(ct);
+                    await tx.CommitAsync(ct);
+                    return new FriendRequestDto(recipientId, requesterId);
+                }
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(request.Action),
+                        "Action must be 'accept', 'deny', or 'cancel'.");
+            }
         }
-        catch (DbUpdateException)
+        catch
         {
             await tx.RollbackAsync(ct);
             throw;
         }
+    }
 
-        return new FriendRequestDto(request.UserThatIsAcceptingOrDenying, request.UserThatIsRequesting);
+    private async Task EnsureFriendshipAsync(string aId, string bId, CancellationToken ct)
+    {
+        var alreadyAB = await db.Set<Friendship>().AnyAsync(f => f.UserId == aId && f.FriendId == bId, ct);
+        var alreadyBA = await db.Set<Friendship>().AnyAsync(f => f.UserId == bId && f.FriendId == aId, ct);
+
+        if (!alreadyAB)
+            db.Set<Friendship>().Add(Friendship.Create(aId, bId));
+
+        if (!alreadyBA)
+            db.Set<Friendship>().Add(Friendship.Create(bId, aId));
     }
 }

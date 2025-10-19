@@ -50,18 +50,18 @@ public class FriendController : BaseApiController
     }
 
     [Authorize]
-    [HttpPost("{userThatIsRequestingId}")]
+    [HttpPost("{recipientId}")]
     public async Task<IActionResult> HandleFriendRequest(
-        string userThatIsRequestingId,
-        [FromBody] FriendRequestAcceptDenyContract contract,
+        string recipientId,
+        [FromBody] FriendRequestAcceptDenyCancelContract cancelContract,
         CancellationToken ct
     )
     {
-        var userThatIsAcceptingOrDenyingId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userThatIsAcceptingOrDenyingId)) return Unauthorized();
+        var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(requesterId)) return Unauthorized();
 
-        var command = new HandleFriendRequestCommand(userThatIsRequestingId, userThatIsAcceptingOrDenyingId,
-            contract.Action.ToLower());
+        var command = new HandleFriendRequestCommand(requesterId, recipientId,
+            cancelContract.Action.ToLower());
         try
         {
             await Mediator.Send(command, ct);
