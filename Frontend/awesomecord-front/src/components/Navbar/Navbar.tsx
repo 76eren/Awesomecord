@@ -2,6 +2,7 @@ import {NavLink} from "react-router-dom";
 import {Bell, ContactRound, LogOut, MessageSquare, Server as ServerIcon, UserIcon} from "lucide-react";
 import * as React from "react";
 import {logout} from "../../services/authService";
+import {useUserStore} from "../../store/userStore.ts";
 
 type NavItem = {
     to: string;
@@ -32,6 +33,8 @@ const DEFAULT_WIDTH = 224;
 const STORAGE_KEY = "sidebarWidthPx";
 
 export default function Navbar() {
+    const user = useUserStore((s) => s.user);
+
     const [width, setWidth] = React.useState<number>(() => {
         const stored = Number(localStorage.getItem(STORAGE_KEY));
         if (Number.isFinite(stored) && stored >= MIN_WIDTH && stored <= MAX_WIDTH) return stored;
@@ -92,7 +95,7 @@ export default function Navbar() {
         >
             <div className="px-4 py-5 border-b border-gray-200 md:block hidden">
                 <div className="text-xl font-semibold tracking-tight">Awesomecord</div>
-                <div className="text-xs text-gray-500">Made by Eren</div>
+                {user != null && <div className="text-xs text-gray-500">Welcome: @{user.userHandle}</div>}
             </div>
 
             <nav className="py-4 md:py-4">
