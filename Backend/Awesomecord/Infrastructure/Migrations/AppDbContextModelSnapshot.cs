@@ -145,7 +145,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ConversationId", "SentAt");
 
-                    b.ToTable("Message");
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("Domain.RefreshToken", b =>

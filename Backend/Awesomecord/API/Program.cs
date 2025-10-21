@@ -8,6 +8,7 @@ using Application.Notifications;
 using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,18 +19,11 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add environment variables as a configuration source
+var envFile = builder.Environment.IsDevelopment() ? ".env.development" : ".env.production";
+Env.Load(Path.Combine(builder.Environment.ContentRootPath, envFile));
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
-
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
@@ -52,24 +46,44 @@ builder.Services.AddAutoMapper(
     Assembly.GetExecutingAssembly()
 );
 
-var jwt = builder.Configuration.GetSection("Jwt");
-builder.Services.Configure<JwtOptions>(jwt);
+// JWT configuration
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtOptions = new JwtOptions
+{
+    Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? jwtSection["Issuer"],
+    Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? jwtSection["Audience"],
+    SigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") ?? jwtSection["SigningKey"],
+    AccessTokenMinutes = int.TryParse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_MINUTES"), out var atm)
+        ? atm
+        : int.Parse(jwtSection["AccessTokenMinutes"] ?? "60"),
+    RefreshTokenDays = int.TryParse(Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_DAYS"), out var rtd)
+        ? rtd
+        : int.Parse(jwtSection["RefreshTokenDays"] ?? "30")
+};
+builder.Services.Configure<JwtOptions>(opts =>
+{
+    opts.Issuer = jwtOptions.Issuer;
+    opts.Audience = jwtOptions.Audience;
+    opts.SigningKey = jwtOptions.SigningKey;
+    opts.AccessTokenMinutes = jwtOptions.AccessTokenMinutes;
+    opts.RefreshTokenDays = jwtOptions.RefreshTokenDays;
+});
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
+// Update JWT Bearer authentication to use jwtOptions
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.SaveToken = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidIssuer = jwt["Issuer"],
-            ValidAudience = jwt["Audience"],
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey =
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["SigningKey"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30)
         };
@@ -85,6 +99,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// Add CORS policy for development
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevelopmentCorsPolicy", policy =>
+        policy.WithOrigins("https://localhost:5173", "http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
+
 
 builder.Services
     .AddSignalR()
@@ -102,13 +127,30 @@ builder.Services.Configure<StorageOptions>(
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
-app.UseCors("AllowFrontend");
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
+var fh = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+fh.KnownNetworks.Clear();
+fh.KnownProxies.Clear();
+app.UseForwardedHeaders(fh);
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+    app.UseCors("DevelopmentCorsPolicy"); // Register CORS middleware before auth
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<UpdateOwnUserHub>("/hubs/userupdates").RequireCors("AllowFrontend");
+app.MapHub<UpdateOwnUserHub>("/hubs/userupdates");
 
 app.MapControllers();
 

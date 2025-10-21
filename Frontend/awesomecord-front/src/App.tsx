@@ -13,6 +13,7 @@ import {useMemo} from "react";
 import {UserUpdatesListener} from "./realtime/listeners/UserUpdatesListener.tsx";
 import Profile from "./components/Profile/profile.tsx";
 import {SignalRRuntime} from "./realtime/signalrRuntime.tsx";
+import {API_URL} from "./schema/constants.ts";
 
 function App() {
     const {authenticated} = useAuth();
@@ -25,7 +26,7 @@ function App() {
     return (
         <div className="min-h-screen w-full bg-gray-50">
             <SignalRRuntime
-                baseUrl="https://localhost:5041"
+                baseUrl={API_URL}
                 hubs={hubs}
                 autoConnect={authenticated}
             />

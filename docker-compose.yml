@@ -10,5 +10,59 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  create-bucket:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5 &&
+      mc alias set myminio http://minio:9000 minioadmin minioadmin123 &&
+      mc mb myminio/images || true &&
+      mc anonymous set public myminio/images
+      "
+    networks:
+      - awesomecord
+
+
+  frontend:
+    build:
+      context: ./Frontend/awesomecord-front
+      dockerfile: Dockerfile
+    environment:
+      VITE_PUBLIC_API_URL: ${PUBLIC_API_URL}
+    ports:
+      - "5173:8080"
+    depends_on:
+      - backend
+    networks:
+      - awesomecord
+
+  backend:
+    build:
+      context: ./Backend/Awesomecord
+      dockerfile: API/Dockerfile
+    env_file:
+      - ./Backend/Awesomecord/API/.env.production
+    ports:
+      - "5000:5000"
+    depends_on:
+      - minio
+    networks:
+      - awesomecord
+    volumes:
+      - awesomecord_sqlite_data:/app/data
+
 volumes:
   minio_data:
+  awesomecord_sqlite_data:
+    
+networks:
+  awesomecord:
+    driver: bridge
