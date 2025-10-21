@@ -62,6 +62,15 @@ function App() {
                 />
 
                 <Route
+                    path="/chats/:id"
+                    element={
+                        <ProtectedGuard>
+                            <Chats/>
+                        </ProtectedGuard>
+                    }
+                />
+
+                <Route
                     path="/chats"
                     element={
                         <ProtectedGuard>

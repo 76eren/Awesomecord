@@ -32,6 +32,7 @@ export default function FriendCard(props: FriendCardProps) {
         toast.success("Friend deleted");
     }
 
+
     return (
         <>
             <div
@@ -60,6 +61,7 @@ export default function FriendCard(props: FriendCardProps) {
                 <div
                     className="flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     <button
+
                         type="button"
                         className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 hover:bg-gray-300"
                     >
