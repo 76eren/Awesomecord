@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Minio;
 using Persistence;
 using Persistence.storage;
 
@@ -131,6 +132,30 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+    var logger = loggerFactory.CreateLogger("Startup");
+
+    try
+    {
+        var storage = scope.ServiceProvider.GetRequiredService<IStorageService>();
+        if (storage is MinioStorageService minio)
+        {
+            await minio.SeedData();
+            logger.LogInformation("MinIO seed completed.");
+        }
+        else
+        {
+            logger.LogInformation("IStorageService is not MinioStorageService; skipping MinIO seed.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "MinIO seed failed.");
+    }
 }
 
 var fh = new ForwardedHeadersOptions
