@@ -7,6 +7,6 @@ public interface IUserUpdatePublisher
 {
     Task UserUpdatedAsync(
         string recipientUserId,
-        FriendRequestReceivedPayload<UserFlatDto> payload,
+        UpdateReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default);
 }

@@ -17,7 +17,7 @@ public class SignalrUserUpdatePublisher : IUserUpdatePublisher
 
     public Task UserUpdatedAsync(
         string recipientUserId,
-        FriendRequestReceivedPayload<UserFlatDto> payload,
+        UpdateReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default)
     {
         return _hub.Clients.User(recipientUserId)
