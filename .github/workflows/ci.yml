@@ -1,4 +1,4 @@
-name: Banking Api Release Pipeline
+name: Awesomecord Release Pipeline
 
 on:
   push:
@@ -61,6 +61,7 @@ jobs:
           file: ./Frontend/awesomecord-front/Dockerfile
           push: true
           provenance: false
+            VITE_PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}
           tags: |
             ghcr.io/${{ steps.repo.outputs.owner_lc }}/${{ env.IMAGE_FRONTEND }}:${{ env.TAG }}
             ghcr.io/${{ steps.repo.outputs.owner_lc }}/${{ env.IMAGE_FRONTEND }}:latest
@@ -81,40 +82,40 @@ jobs:
           name: deploy-compose
           path: .
 
-      - name: Add SSH key
+      - name: Add SSH key and known_hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${SSH_KEY}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          printf '%s' "${SSH_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.pub || true
           ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Create directory structure on server
         run: |
-          ssh -i ~/.ssh/id_rsa ${SSH_USERNAME}@${SERVER_IP} << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} << 'EOF'
           set -euo pipefail
           mkdir -p "${DEPLOYMENT_SERVER_DIRECTORY}/Frontend/awesomecord-front"
           mkdir -p "${DEPLOYMENT_SERVER_DIRECTORY}/Backend/Awesomecord/API"
           EOF
 
       - name: Push docker-compose.deploy.yml to server
-        run: scp -i ~/.ssh/id_rsa docker-compose.deploy.yml ${SSH_USERNAME}@${SERVER_IP}:"${DEPLOYMENT_SERVER_DIRECTORY}/docker-compose.deploy.yml"
+        run: scp -i ~/.ssh/id_ed25519 docker-compose.deploy.yml ${SSH_USERNAME}@${SERVER_IP}:"${DEPLOYMENT_SERVER_DIRECTORY}/docker-compose.deploy.yml"
 
       - name: Write env files on server
         run: |
-          ssh -i ~/.ssh/id_rsa ${SSH_USERNAME}@${SERVER_IP} << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} << 'EOF'
           set -euo pipefail
 
-          # root .env for Compose
           cat > "${DEPLOYMENT_SERVER_DIRECTORY}/.env" << 'EOROOT'
           ${ENV_DOCKER_COMPOSE}
           EOROOT
 
-          # frontend .env
           cat > "${DEPLOYMENT_SERVER_DIRECTORY}/Frontend/awesomecord-front/.env" << 'EOFE'
           ${ENV_FRONTEND}
           EOFE
 
-          # backend .env.production
           cat > "${DEPLOYMENT_SERVER_DIRECTORY}/Backend/Awesomecord/API/.env.production" << 'EOBE'
           ${DOTNET_ENV_PRODUCTION}
           EOBE
@@ -124,7 +125,7 @@ jobs:
         env:
           GH_OWNER: ${{ github.repository_owner }}
         run: |
-          ssh -i ~/.ssh/id_rsa ${SSH_USERNAME}@${SERVER_IP} << EOF
+          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} << EOF
           set -euo pipefail
           cd "${DEPLOYMENT_SERVER_DIRECTORY}"
           export TAG="${TAG}"
@@ -132,3 +133,4 @@ jobs:
 
           docker compose -f docker-compose.deploy.yml pull
           docker compose -f docker-compose.deploy.yml up -d
+          EOF
