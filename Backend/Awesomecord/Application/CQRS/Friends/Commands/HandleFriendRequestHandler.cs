@@ -67,10 +67,10 @@ public sealed class HandleFriendRequestHandler(AppDbContext db, IUserUpdatePubli
 
                     await db.SaveChangesAsync(ct);
                     await tx.CommitAsync(ct);
-                    
+
                     await Notify(requester, ct);
                     await Notify(recipient, ct);
-                    
+
                     return new FriendRequestDto(recipientId, requesterId);
                 }
 
@@ -84,7 +84,7 @@ public sealed class HandleFriendRequestHandler(AppDbContext db, IUserUpdatePubli
 
                     await db.SaveChangesAsync(ct);
                     await tx.CommitAsync(ct);
-                    
+
                     await Notify(requester, ct);
                     await Notify(recipient, ct);
                     return new FriendRequestDto(recipientId, requesterId);
@@ -118,7 +118,7 @@ public sealed class HandleFriendRequestHandler(AppDbContext db, IUserUpdatePubli
     {
         // Todo: this code gets re-used a lot maybe move to a helper method/class
         var updatedUserADto = UserFlatDto.FromUser(user);
-        var payloadUserA = new FriendRequestReceivedPayload<UserFlatDto>
+        var payloadUserA = new UpdateReceivedPayload<UserFlatDto>
         {
             UpdatedUserModel = updatedUserADto
         };

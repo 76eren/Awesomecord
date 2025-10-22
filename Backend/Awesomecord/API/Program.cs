@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using API.Hubs;
 using API.Services;
 using Application.CQRS.Users.Commands;
+using Application.Interfaces;
 using Application.Notifications;
 using DotNetEnv;
 using FluentValidation;
@@ -12,7 +13,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Minio;
 using Persistence;
 using Persistence.storage;
 
@@ -121,6 +121,7 @@ builder.Services
     });
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 builder.Services.AddScoped<IUserUpdatePublisher, SignalrUserUpdatePublisher>();
+builder.Services.AddScoped<IConversationUpdatePublisher, SignalrConversationUpdatePublisher>();
 builder.Services.AddSingleton<IStorageService, MinioStorageService>();
 builder.Services.Configure<StorageOptions>(
     builder.Configuration.GetSection(StorageOptions.SectionName)
@@ -176,6 +177,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHub<UpdateOwnUserHub>("/hubs/userupdates");
+app.MapHub<UpdateConversationsHub>("/hubs/conversationupdates");
 
 app.MapControllers();
 

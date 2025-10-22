@@ -14,12 +14,16 @@ import {UserUpdatesListener} from "./realtime/listeners/UserUpdatesListener.tsx"
 import Profile from "./components/Profile/profile.tsx";
 import {SignalRRuntime} from "./realtime/signalrRuntime.tsx";
 import {API_URL} from "./schema/constants.ts";
+import {ConversationUpdateListener} from "./realtime/listeners/ConversationUpdateListener.tsx";
 
 function App() {
     const {authenticated} = useAuth();
 
     const hubs = useMemo(
-        () => [{key: "userupdates", path: "hubs/userupdates"}],
+        () => [
+            {key: "userupdates", path: "hubs/userupdates"},
+            {key: "conversationupdate", path: "hubs/conversationupdates"}
+        ],
         []
     );
 
@@ -31,6 +35,7 @@ function App() {
                 autoConnect={authenticated}
             />
             {authenticated && <UserUpdatesListener/>}
+            {authenticated && <ConversationUpdateListener/>}
 
             <Routes>
                 <Route path="/" element={<Navigate to="/chats" replace/>}/>

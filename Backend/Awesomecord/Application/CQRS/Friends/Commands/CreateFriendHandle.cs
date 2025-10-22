@@ -82,7 +82,7 @@ public sealed class CreateFriendHandle(AppDbContext db, IUserUpdatePublisher not
     private async Task NotifyFriendRequestAsync(string recipientUserId, CancellationToken ct)
     {
         var freshRecipient = await db.Users.FirstAsync(u => u.Id == recipientUserId, ct);
-        var payload = new FriendRequestReceivedPayload<UserFlatDto>
+        var payload = new UpdateReceivedPayload<UserFlatDto>
         {
             UpdatedUserModel = UserFlatDto.FromUser(freshRecipient)
         };
