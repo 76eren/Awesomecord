@@ -9,7 +9,7 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class CreateFriendHandle(AppDbContext db, INotificationsPublisher notifier)
+public sealed class CreateFriendHandle(AppDbContext db, IUserUpdatePublisher notifier)
     : IRequestHandler<CreateFriendRequestCommand, FriendRequestDto>
 {
     public async Task<FriendRequestDto> Handle(CreateFriendRequestCommand request, CancellationToken ct)

@@ -120,7 +120,7 @@ builder.Services
         opts.PayloadSerializerOptions.MaxDepth = 16;
     });
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
-builder.Services.AddScoped<INotificationsPublisher, SignalRNotificationsPublisher>();
+builder.Services.AddScoped<IUserUpdatePublisher, SignalrUserUpdatePublisher>();
 builder.Services.AddSingleton<IStorageService, MinioStorageService>();
 builder.Services.Configure<StorageOptions>(
     builder.Configuration.GetSection(StorageOptions.SectionName)

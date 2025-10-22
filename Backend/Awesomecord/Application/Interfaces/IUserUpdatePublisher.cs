@@ -3,7 +3,7 @@ using Application.DTOs.Notifications;
 
 namespace Application.Notifications;
 
-public interface INotificationsPublisher
+public interface IUserUpdatePublisher
 {
     Task FriendRequestReceivedAsync(
         string recipientUserId,

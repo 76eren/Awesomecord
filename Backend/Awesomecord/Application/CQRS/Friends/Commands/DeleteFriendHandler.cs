@@ -8,7 +8,7 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class DeleteFriendHandler(AppDbContext db, INotificationsPublisher notifier)
+public sealed class DeleteFriendHandler(AppDbContext db, IUserUpdatePublisher notifier)
     : IRequestHandler<DeleteFriendCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteFriendCommand request, CancellationToken cancellationToken)
