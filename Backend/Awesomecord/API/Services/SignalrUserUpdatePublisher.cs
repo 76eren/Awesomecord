@@ -6,18 +6,18 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace API.Services;
 
-public class SignalRNotificationsPublisher : INotificationsPublisher
+public class SignalrUserUpdatePublisher : IUserUpdatePublisher
 {
     private readonly IHubContext<UpdateOwnUserHub> _hub;
 
-    public SignalRNotificationsPublisher(IHubContext<UpdateOwnUserHub> hub)
+    public SignalrUserUpdatePublisher(IHubContext<UpdateOwnUserHub> hub)
     {
         _hub = hub;
     }
 
-    public Task FriendRequestReceivedAsync(
+    public Task UserUpdatedAsync(
         string recipientUserId,
-        FriendRequestReceivedPayload<UserFlatDto> payload,
+        UpdateReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default)
     {
         return _hub.Clients.User(recipientUserId)

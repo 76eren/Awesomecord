@@ -1,11 +1,17 @@
-﻿using Domain;
+﻿using Application.CQRS.Conversations.Query;
+using Application.Interfaces;
+using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
 namespace Application.CQRS.Conversations.Command;
 
-public sealed class CreateConversationHandler(AppDbContext dbContext) : IRequestHandler<CreateConversationCommand, Unit>
+public sealed class CreateConversationHandler(
+    AppDbContext dbContext,
+    IConversationUpdatePublisher _conversationUpdatePublisher,
+    IMediator _mediator
+) : IRequestHandler<CreateConversationCommand, Unit>
 {
     public async Task<Unit> Handle(CreateConversationCommand request, CancellationToken cancellationToken)
     {
@@ -35,9 +41,30 @@ public sealed class CreateConversationHandler(AppDbContext dbContext) : IRequest
             };
 
             dbContext.Conversation.Add(conversation);
+
+            UpdateConversationsListParticipants(request.UserIdA);
+            UpdateConversationsListParticipants(request.UserIdB);
+
             await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         return Unit.Value;
+    }
+
+    private async void UpdateConversationsListParticipants(string userId)
+    {
+        try
+        {
+            var query = new GetConversations.Query
+            {
+                User = userId
+            };
+
+            var conversations = await _mediator.Send(query);
+            await _conversationUpdatePublisher.ConversationsUpdatedAsync(userId, conversations);
+        }
+        catch (Exception e)
+        {
+        }
     }
 }

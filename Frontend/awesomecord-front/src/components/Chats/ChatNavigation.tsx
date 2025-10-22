@@ -20,6 +20,9 @@ export default function ChatNavigation() {
     const fetchConversations = useConversationStore((s) => s.fetchConversations);
     const fetchConversationUsers = useConversationStore((s) => s.fetchConversationUsers);
 
+    const isLoadingConversations = useConversationStore((s) => s.isLoading);
+    const conversationsError = useConversationStore((s) => s.error);
+
     const [selectedConversation, setSelectedConversation] = useState<ConversationModel | null>(null);
 
     useEffect(() => {
@@ -53,6 +56,13 @@ export default function ChatNavigation() {
     }
 
     const selectedId = conversationId ?? selectedConversation?.id;
+
+    if (isLoadingConversations) {
+        return <h1>Loading...</h1>
+    }
+    if (conversationsError) {
+        return <h1>Error loading conversations.</h1>
+    }
 
     return (
         <aside

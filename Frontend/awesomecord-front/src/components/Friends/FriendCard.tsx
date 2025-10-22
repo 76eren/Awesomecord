@@ -3,6 +3,7 @@ import type {LimitedUserModel} from "../../Models/User/limitedUser.model.ts";
 import {getProfilePictureUrlByUserId, getUserById} from "../../services/userService.ts";
 import {toast} from "react-toastify";
 import {deleteFriendFromFriendslist} from "../../services/friendService.ts";
+import {createConversation} from "../../services/conversationService.ts";
 
 type FriendCardProps = {
     friendId: string
@@ -30,6 +31,15 @@ export default function FriendCard(props: FriendCardProps) {
     async function deleteFriend(friendId: string) {
         await deleteFriendFromFriendslist(friendId);
         toast.success("Friend deleted");
+    }
+
+    async function startConversation() {
+        let id = props.friendId;
+        createConversation(id).then(() => {
+            window.location.href = `/chats`;
+        }).catch(() => {
+            toast.error("Failed to start conversation");
+        });
     }
 
 
@@ -61,7 +71,9 @@ export default function FriendCard(props: FriendCardProps) {
                 <div
                     className="flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     <button
-
+                        onClick={() => {
+                            startConversation();
+                        }}
                         type="button"
                         className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 hover:bg-gray-300"
                     >

@@ -3,10 +3,10 @@ using Application.DTOs.Notifications;
 
 namespace Application.Notifications;
 
-public interface INotificationsPublisher
+public interface IUserUpdatePublisher
 {
-    Task FriendRequestReceivedAsync(
+    Task UserUpdatedAsync(
         string recipientUserId,
-        FriendRequestReceivedPayload<UserFlatDto> payload,
+        UpdateReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default);
 }

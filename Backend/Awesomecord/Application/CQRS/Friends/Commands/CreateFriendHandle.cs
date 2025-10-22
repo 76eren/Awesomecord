@@ -9,7 +9,7 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class CreateFriendHandle(AppDbContext db, INotificationsPublisher notifier)
+public sealed class CreateFriendHandle(AppDbContext db, IUserUpdatePublisher notifier)
     : IRequestHandler<CreateFriendRequestCommand, FriendRequestDto>
 {
     public async Task<FriendRequestDto> Handle(CreateFriendRequestCommand request, CancellationToken ct)
@@ -82,10 +82,10 @@ public sealed class CreateFriendHandle(AppDbContext db, INotificationsPublisher 
     private async Task NotifyFriendRequestAsync(string recipientUserId, CancellationToken ct)
     {
         var freshRecipient = await db.Users.FirstAsync(u => u.Id == recipientUserId, ct);
-        var payload = new FriendRequestReceivedPayload<UserFlatDto>
+        var payload = new UpdateReceivedPayload<UserFlatDto>
         {
             UpdatedUserModel = UserFlatDto.FromUser(freshRecipient)
         };
-        await notifier.FriendRequestReceivedAsync(recipientUserId, payload, ct);
+        await notifier.UserUpdatedAsync(recipientUserId, payload, ct);
     }
 }

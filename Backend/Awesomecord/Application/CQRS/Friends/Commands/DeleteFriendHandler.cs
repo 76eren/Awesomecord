@@ -8,7 +8,7 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class DeleteFriendHandler(AppDbContext db, INotificationsPublisher notifier)
+public sealed class DeleteFriendHandler(AppDbContext db, IUserUpdatePublisher notifier)
     : IRequestHandler<DeleteFriendCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteFriendCommand request, CancellationToken cancellationToken)
@@ -39,17 +39,17 @@ public sealed class DeleteFriendHandler(AppDbContext db, INotificationsPublisher
     private async Task NotifyFriendDeletion(User user, User friend, CancellationToken cancellationToken)
     {
         var updatedUserADto = UserFlatDto.FromUser(user);
-        var payloadUserA = new FriendRequestReceivedPayload<UserFlatDto>
+        var payloadUserA = new UpdateReceivedPayload<UserFlatDto>
         {
             UpdatedUserModel = updatedUserADto
         };
-        await notifier.FriendRequestReceivedAsync(user.Id, payloadUserA, cancellationToken);
+        await notifier.UserUpdatedAsync(user.Id, payloadUserA, cancellationToken);
 
         var updatedUserBDto = UserFlatDto.FromUser(friend);
-        var payloadUserB = new FriendRequestReceivedPayload<UserFlatDto>
+        var payloadUserB = new UpdateReceivedPayload<UserFlatDto>
         {
             UpdatedUserModel = updatedUserBDto
         };
-        await notifier.FriendRequestReceivedAsync(friend.Id, payloadUserB, cancellationToken);
+        await notifier.UserUpdatedAsync(friend.Id, payloadUserB, cancellationToken);
     }
 }

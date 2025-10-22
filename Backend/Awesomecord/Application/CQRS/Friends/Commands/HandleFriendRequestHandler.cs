@@ -9,7 +9,7 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class HandleFriendRequestHandler(AppDbContext db, INotificationsPublisher notifier)
+public sealed class HandleFriendRequestHandler(AppDbContext db, IUserUpdatePublisher notifier)
     : IRequestHandler<HandleFriendRequestCommand, FriendRequestDto>
 {
     public async Task<FriendRequestDto> Handle(HandleFriendRequestCommand request, CancellationToken ct)
@@ -67,10 +67,10 @@ public sealed class HandleFriendRequestHandler(AppDbContext db, INotificationsPu
 
                     await db.SaveChangesAsync(ct);
                     await tx.CommitAsync(ct);
-                    
+
                     await Notify(requester, ct);
                     await Notify(recipient, ct);
-                    
+
                     return new FriendRequestDto(recipientId, requesterId);
                 }
 
@@ -84,7 +84,7 @@ public sealed class HandleFriendRequestHandler(AppDbContext db, INotificationsPu
 
                     await db.SaveChangesAsync(ct);
                     await tx.CommitAsync(ct);
-                    
+
                     await Notify(requester, ct);
                     await Notify(recipient, ct);
                     return new FriendRequestDto(recipientId, requesterId);
@@ -118,10 +118,10 @@ public sealed class HandleFriendRequestHandler(AppDbContext db, INotificationsPu
     {
         // Todo: this code gets re-used a lot maybe move to a helper method/class
         var updatedUserADto = UserFlatDto.FromUser(user);
-        var payloadUserA = new FriendRequestReceivedPayload<UserFlatDto>
+        var payloadUserA = new UpdateReceivedPayload<UserFlatDto>
         {
             UpdatedUserModel = updatedUserADto
         };
-        await notifier.FriendRequestReceivedAsync(user.Id, payloadUserA, cancellationToken);
+        await notifier.UserUpdatedAsync(user.Id, payloadUserA, cancellationToken);
     }
 }
