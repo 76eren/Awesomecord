@@ -61,6 +61,7 @@ jobs:
           file: ./Frontend/awesomecord-front/Dockerfile
           push: true
           provenance: false
+          build-args: |
             VITE_PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}
           tags: |
             ghcr.io/${{ steps.repo.outputs.owner_lc }}/${{ env.IMAGE_FRONTEND }}:${{ env.TAG }}
@@ -109,17 +110,14 @@ jobs:
           set -eo pipefail
           DEPLOYMENT_SERVER_DIRECTORY="${DEPLOYMENT_SERVER_DIRECTORY}"
 
-          # root .env for Compose interpolation
           cat > "\$DEPLOYMENT_SERVER_DIRECTORY/.env" << 'EOROOT'
           ${ENV_DOCKER_COMPOSE}
           EOROOT
 
-          # frontend .env (only needed if you do runtime injection; safe to keep)
           cat > "\$DEPLOYMENT_SERVER_DIRECTORY/Frontend/awesomecord-front/.env" << 'EOFE'
           ${ENV_FRONTEND}
           EOFE
 
-          # backend .env.production consumed by env_file:
           cat > "\$DEPLOYMENT_SERVER_DIRECTORY/Backend/Awesomecord/API/.env.production" << 'EOBE'
           ${DOTNET_ENV_PRODUCTION}
           EOBE
