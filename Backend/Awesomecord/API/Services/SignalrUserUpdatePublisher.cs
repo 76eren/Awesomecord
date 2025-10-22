@@ -15,7 +15,7 @@ public class SignalrUserUpdatePublisher : IUserUpdatePublisher
         _hub = hub;
     }
 
-    public Task FriendRequestReceivedAsync(
+    public Task UserUpdatedAsync(
         string recipientUserId,
         FriendRequestReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default)

@@ -122,6 +122,6 @@ public sealed class HandleFriendRequestHandler(AppDbContext db, IUserUpdatePubli
         {
             UpdatedUserModel = updatedUserADto
         };
-        await notifier.FriendRequestReceivedAsync(user.Id, payloadUserA, cancellationToken);
+        await notifier.UserUpdatedAsync(user.Id, payloadUserA, cancellationToken);
     }
 }

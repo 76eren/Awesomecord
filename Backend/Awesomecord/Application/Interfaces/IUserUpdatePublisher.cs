@@ -5,7 +5,7 @@ namespace Application.Notifications;
 
 public interface IUserUpdatePublisher
 {
-    Task FriendRequestReceivedAsync(
+    Task UserUpdatedAsync(
         string recipientUserId,
         FriendRequestReceivedPayload<UserFlatDto> payload,
         CancellationToken ct = default);

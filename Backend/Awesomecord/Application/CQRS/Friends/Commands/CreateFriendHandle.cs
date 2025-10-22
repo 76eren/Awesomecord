@@ -86,6 +86,6 @@ public sealed class CreateFriendHandle(AppDbContext db, IUserUpdatePublisher not
         {
             UpdatedUserModel = UserFlatDto.FromUser(freshRecipient)
         };
-        await notifier.FriendRequestReceivedAsync(recipientUserId, payload, ct);
+        await notifier.UserUpdatedAsync(recipientUserId, payload, ct);
     }
 }

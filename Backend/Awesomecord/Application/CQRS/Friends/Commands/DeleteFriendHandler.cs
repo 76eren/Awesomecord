@@ -43,13 +43,13 @@ public sealed class DeleteFriendHandler(AppDbContext db, IUserUpdatePublisher no
         {
             UpdatedUserModel = updatedUserADto
         };
-        await notifier.FriendRequestReceivedAsync(user.Id, payloadUserA, cancellationToken);
+        await notifier.UserUpdatedAsync(user.Id, payloadUserA, cancellationToken);
 
         var updatedUserBDto = UserFlatDto.FromUser(friend);
         var payloadUserB = new FriendRequestReceivedPayload<UserFlatDto>
         {
             UpdatedUserModel = updatedUserBDto
         };
-        await notifier.FriendRequestReceivedAsync(friend.Id, payloadUserB, cancellationToken);
+        await notifier.UserUpdatedAsync(friend.Id, payloadUserB, cancellationToken);
     }
 }
