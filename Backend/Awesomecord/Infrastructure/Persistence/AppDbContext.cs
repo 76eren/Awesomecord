@@ -9,8 +9,11 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<User> Users { get; set; }
     public DbSet<Friendship> Friendships => Set<Friendship>();
     public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
-    
-    
+    public DbSet<Conversation> Conversation => Set<Conversation>();
+    public DbSet<ConversationParticipent> ConversationParticipent => Set<ConversationParticipent>();
+    public DbSet<Message> Messages => Set<Message>();
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -39,7 +42,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             b.HasKey(f => f.Id);
             b.Property(fr => fr.RequesterId).HasMaxLength(64);
             b.Property(fr => fr.RecipientId).HasMaxLength(64);
-            
+
             b.Property(fr => fr.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -56,9 +59,8 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             b.HasCheckConstraint("CK_FriendRequest_NotSelf", "[RequesterId] <> [RecipientId]");
             b.HasIndex(fr => new { fr.RequesterId, fr.RecipientId })
                 .IsUnique();
-            
         });
-        
+
         modelBuilder.Entity<Friendship>(b =>
         {
             b.HasKey(f => f.Id);
@@ -75,5 +77,33 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             b.Property(f => f.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 
+        modelBuilder.Entity<Conversation>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasMany(x => x.Participants)
+                .WithOne(x => x.Conversation)
+                .HasForeignKey(x => x.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Messages)
+                .WithOne(x => x.Conversation)
+                .HasForeignKey(x => x.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.Property(x => x.CreatedAt).HasPrecision(0);
+        });
+
+        modelBuilder.Entity<ConversationParticipent>(b =>
+        {
+            b.HasKey(x => new { x.ConversationId, x.UserId });
+            b.HasIndex(x => x.UserId);
+            b.Property(x => x.JoinedAt).HasPrecision(0);
+        });
+
+        modelBuilder.Entity<Message>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.ConversationId, x.SentAt });
+            b.Property(x => x.Body).IsRequired().HasMaxLength(4000);
+            b.Property(x => x.SentAt).HasPrecision(0);
+        });
     }
 }

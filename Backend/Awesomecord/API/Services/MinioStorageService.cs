@@ -41,7 +41,7 @@ public sealed class MinioStorageService : IStorageService
         var presign = new PresignedGetObjectArgs()
             .WithBucket(_options.Bucket)
             .WithObject(objectName)
-            .WithExpiry(_options.PreSignedExpiryMinutes * 60);
+            .WithExpiry(_options.PresignedExpiryMinutes * 60);
 
         return await _client.PresignedGetObjectAsync(presign);
     }
@@ -131,4 +131,58 @@ public sealed class MinioStorageService : IStorageService
 
         if (!exists) await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct);
     }
+
+    public async Task SeedData()
+    {
+        bool found = await _client.BucketExistsAsync(new BucketExistsArgs().WithBucket(_options.Bucket));
+        if (!found)
+        {
+            await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket));
+            Console.WriteLine($"Bucket '{_options.Bucket}' created.");
+        }
+
+        var directory = "users/";
+        var objectName = $"{directory}default-profile.jpg";
+        var contentRoot = AppContext.BaseDirectory;
+        var defaultImagePath = Path.Combine(contentRoot, "images", "default-profile.jpg");
+        
+        if (!File.Exists(defaultImagePath))
+        {
+            Console.WriteLine($"Default image not found at `{defaultImagePath}`. Skipping upload.");
+            return;
+        }
+
+        try
+        {
+            await _client.StatObjectAsync(new StatObjectArgs().WithBucket(_options.Bucket).WithObject(directory));
+        }
+        catch (ObjectNotFoundException)
+        {
+            using var emptyStream = new MemoryStream(Array.Empty<byte>());
+            await _client.PutObjectAsync(new PutObjectArgs()
+                .WithBucket(_options.Bucket)
+                .WithObject(directory)
+                .WithStreamData(emptyStream)
+                .WithObjectSize(0)
+                .WithContentType("application/x-directory"));
+            Console.WriteLine($"Directory `{directory}` created in bucket.");
+        }
+
+        try
+        {
+            await _client.StatObjectAsync(new StatObjectArgs().WithBucket(_options.Bucket).WithObject(objectName));
+            Console.WriteLine("Default image already exists in bucket.");
+        }
+        catch (ObjectNotFoundException)
+        {
+            await _client.PutObjectAsync(new PutObjectArgs()
+                .WithBucket(_options.Bucket)
+                .WithObject(objectName)
+                .WithFileName(defaultImagePath)
+                .WithContentType("image/jpeg"));
+
+            Console.WriteLine("Default image uploaded to bucket.");
+        }
+    }
+    
 }

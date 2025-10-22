@@ -1,3 +1,4 @@
+using API.Contracts.Conversation;
 using API.Contracts.User;
 using Application.DTOs;
 using AutoMapper;
@@ -21,5 +22,7 @@ public sealed class ApiMappingProfile : Profile
 
         CreateMap<UserDto, GetUserResponseNoSensitiveDataResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+
+        CreateMap<ConversationDto, GetConversationContract>();
     }
 }

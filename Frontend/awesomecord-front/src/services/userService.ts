@@ -6,6 +6,13 @@ export async function getUserById(id: string): Promise<LimitedUserModel> {
     return apiFetch<LimitedUserModel>("user/" + id, {method: "GET"});
 }
 
+export async function GetMultipleUsersByIds(ids: string[]): Promise<LimitedUserModel[]> {
+    return apiFetch<LimitedUserModel[]>("user", {
+        method: "POST",
+        json: {users: ids},
+    });
+}
+
 export function getProfilePictureUrlByUserId(id: string): string {
     return API_BASE_URL + "image/profile/?userId=" + id;
 }

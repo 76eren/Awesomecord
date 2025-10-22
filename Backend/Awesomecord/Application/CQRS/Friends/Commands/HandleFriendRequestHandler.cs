@@ -1,5 +1,7 @@
 ﻿using Application.Common.Exceptions;
 using Application.DTOs;
+using Application.DTOs.Notifications;
+using Application.Notifications;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +9,7 @@ using Persistence;
 
 namespace Application.CQRS.Friends.Commands;
 
-public sealed class HandleFriendRequestHandler(AppDbContext db)
+public sealed class HandleFriendRequestHandler(AppDbContext db, INotificationsPublisher notifier)
     : IRequestHandler<HandleFriendRequestCommand, FriendRequestDto>
 {
     public async Task<FriendRequestDto> Handle(HandleFriendRequestCommand request, CancellationToken ct)
@@ -15,9 +17,9 @@ public sealed class HandleFriendRequestHandler(AppDbContext db)
         var recipientId = request.RecipientId;
         var requesterId = request.RequesterId;
 
-        var recipientExists = await db.Users.AnyAsync(u => u.Id == recipientId, ct);
-        var requesterExists = await db.Users.AnyAsync(u => u.Id == requesterId, ct);
-        if (!recipientExists || !requesterExists)
+        var recipient = await db.Users.SingleOrDefaultAsync(u => u.Id == recipientId, ct);
+        var requester = await db.Users.SingleOrDefaultAsync(u => u.Id == requesterId, ct);
+        if (recipient is null || requester is null)
             throw new UserNotFoundException();
 
         var action = request.Action?.Trim().ToLowerInvariant();
@@ -48,6 +50,9 @@ public sealed class HandleFriendRequestHandler(AppDbContext db)
 
                     await db.SaveChangesAsync(ct);
                     await tx.CommitAsync(ct);
+
+                    await Notify(requester, ct);
+                    await Notify(recipient, ct);
                     return new FriendRequestDto(recipientId, requesterId);
                 }
 
@@ -62,6 +67,10 @@ public sealed class HandleFriendRequestHandler(AppDbContext db)
 
                     await db.SaveChangesAsync(ct);
                     await tx.CommitAsync(ct);
+                    
+                    await Notify(requester, ct);
+                    await Notify(recipient, ct);
+                    
                     return new FriendRequestDto(recipientId, requesterId);
                 }
 
@@ -75,6 +84,9 @@ public sealed class HandleFriendRequestHandler(AppDbContext db)
 
                     await db.SaveChangesAsync(ct);
                     await tx.CommitAsync(ct);
+                    
+                    await Notify(requester, ct);
+                    await Notify(recipient, ct);
                     return new FriendRequestDto(recipientId, requesterId);
                 }
 
@@ -100,5 +112,16 @@ public sealed class HandleFriendRequestHandler(AppDbContext db)
 
         if (!alreadyBA)
             db.Set<Friendship>().Add(Friendship.Create(bId, aId));
+    }
+
+    private async Task Notify(User user, CancellationToken cancellationToken)
+    {
+        // Todo: this code gets re-used a lot maybe move to a helper method/class
+        var updatedUserADto = UserFlatDto.FromUser(user);
+        var payloadUserA = new FriendRequestReceivedPayload<UserFlatDto>
+        {
+            UpdatedUserModel = updatedUserADto
+        };
+        await notifier.FriendRequestReceivedAsync(user.Id, payloadUserA, cancellationToken);
     }
 }

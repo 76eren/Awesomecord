@@ -65,6 +65,7 @@ public sealed class CreateFriendHandle(AppDbContext db, INotificationsPublisher 
         await db.SaveChangesAsync(ct);
 
         await NotifyFriendRequestAsync(receiver.Id, ct);
+        await NotifyFriendRequestAsync(sender.Id, ct);
 
         return new FriendRequestDto(request.SenderHandle, request.ReceiverHandle);
     }
