@@ -16,7 +16,7 @@ env:
   DEPLOYMENT_SERVER_DIRECTORY: ${{ secrets.DEPLOYMENT_SERVER_DIRECTORY }}
   SERVER_IP: ${{ secrets.SERVER_IP }}
   SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-  SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  SSH_KEY: ${{ secrets.SSH_KEY }}
 
   ENV_DOCKER_COMPOSE: ${{ secrets.ENV_DOCKER_COMPOSE }}
   DOTNET_ENV_PRODUCTION: ${{ secrets.DOTNET_ENV_PRODUCTION }}
@@ -85,35 +85,42 @@ jobs:
       - name: Add SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          printf '%s' "${SSH_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
 
       - name: Create directory structure on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} << 'EOF'
-          set -euo pipefail
-          mkdir -p "${DEPLOYMENT_SERVER_DIRECTORY}/Frontend/awesomecord-front"
-          mkdir -p "${DEPLOYMENT_SERVER_DIRECTORY}/Backend/Awesomecord/API"
+          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} <<EOF
+          set -eo pipefail
+          DEPLOYMENT_SERVER_DIRECTORY="${DEPLOYMENT_SERVER_DIRECTORY}"
+          mkdir -p "\$DEPLOYMENT_SERVER_DIRECTORY/Frontend/awesomecord-front"
+          mkdir -p "\$DEPLOYMENT_SERVER_DIRECTORY/Backend/Awesomecord/API"
           EOF
 
       - name: Push docker-compose.deploy.yml to server
-        run: scp -i ~/.ssh/id_ed25519 docker-compose.deploy.yml ${SSH_USERNAME}@${SERVER_IP}:"${DEPLOYMENT_SERVER_DIRECTORY}/docker-compose.deploy.yml"
+        run: |
+          scp -i ~/.ssh/id_ed25519 docker-compose.deploy.yml \
+            ${SSH_USERNAME}@${SERVER_IP}:"${DEPLOYMENT_SERVER_DIRECTORY}/docker-compose.deploy.yml"
 
       - name: Write env files on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} << 'EOF'
-          set -euo pipefail
+          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} <<EOF
+          set -eo pipefail
+          DEPLOYMENT_SERVER_DIRECTORY="${DEPLOYMENT_SERVER_DIRECTORY}"
 
-          cat > "${DEPLOYMENT_SERVER_DIRECTORY}/.env" << 'EOROOT'
+          # root .env for Compose interpolation
+          cat > "\$DEPLOYMENT_SERVER_DIRECTORY/.env" << 'EOROOT'
           ${ENV_DOCKER_COMPOSE}
           EOROOT
 
-          cat > "${DEPLOYMENT_SERVER_DIRECTORY}/Frontend/awesomecord-front/.env" << 'EOFE'
+          # frontend .env (only needed if you do runtime injection; safe to keep)
+          cat > "\$DEPLOYMENT_SERVER_DIRECTORY/Frontend/awesomecord-front/.env" << 'EOFE'
           ${ENV_FRONTEND}
           EOFE
 
-          cat > "${DEPLOYMENT_SERVER_DIRECTORY}/Backend/Awesomecord/API/.env.production" << 'EOBE'
+          # backend .env.production consumed by env_file:
+          cat > "\$DEPLOYMENT_SERVER_DIRECTORY/Backend/Awesomecord/API/.env.production" << 'EOBE'
           ${DOTNET_ENV_PRODUCTION}
           EOBE
           EOF
@@ -122,8 +129,8 @@ jobs:
         env:
           GH_OWNER: ${{ github.repository_owner }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} << EOF
-          set -euo pipefail
+          ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} <<EOF
+          set -eo pipefail
           cd "${DEPLOYMENT_SERVER_DIRECTORY}"
           export TAG="${TAG}"
           export GH_OWNER="${GH_OWNER,,}"
