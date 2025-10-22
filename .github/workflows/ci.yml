@@ -85,12 +85,9 @@ jobs:
       - name: Add SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${SSH_KEY_B64}" | base64 -d > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
-        env:
-          SSH_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
 
       - name: Create directory structure on server
         run: |
