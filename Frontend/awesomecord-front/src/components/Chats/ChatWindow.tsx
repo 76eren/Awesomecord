@@ -10,6 +10,9 @@ import {useConversationStore} from "../../store/conversationStore.ts";
 import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
 import {useSignalRStore} from "../../store/signalrStore.ts";
 
+// ⬇️ use the sprite-based hook (same file path as your hook module)
+import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
+
 type ChatWindowProps = {
     conversationId: string;
     title?: string;
@@ -38,6 +41,13 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     const ensure = useSignalRStore((s) => s.ensure);
     const on = useSignalRStore((s) => s.on);
 
+    const {speak, stop, ready} = useAnimaleseSpriteAuto({
+        url: "/assets/animalCrossing/m1.ogg",
+        letters: "abcdefghijklmnopqrstuvwxyz",
+
+    });
+    const [voiceEnabled, setVoiceEnabled] = useState(true);
+
     useEffect(() => {
         let canceled = false;
         let unsub: (() => void) | undefined;
@@ -50,7 +60,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                 const handler = async (payload: any) => {
                     const msg: MessageModel = payload?.messageModel ?? payload;
                     if (!msg) return;
-
                     if (msg.conversationId !== conversationId) return;
 
                     setMessages((prev) => {
@@ -62,6 +71,10 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                         const el = containerRef.current;
                         if (el) el.scrollTop = el.scrollHeight;
                     });
+
+                    if (voiceEnabled && ready && msg.senderId !== currentUserId && msg.body) {
+                        speak(msg.body);
+                    }
                 };
 
                 unsub = on("messages", "messages", handler);
@@ -74,8 +87,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
             canceled = true;
             if (unsub) unsub();
         };
-    }, [ensure, on, conversationId]);
-
+    }, [ensure, on, conversationId, currentUserId, speak, voiceEnabled, ready]);
 
     const handleSendMessage = useCallback(async (body: string, image?: File) => {
         try {
@@ -96,7 +108,9 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     const handleSubmit = async () => {
         if (!inputValue.trim() && !attachedImage) return;
 
-        await handleSendMessage(inputValue.trim(), attachedImage ?? undefined);
+        const toSend = inputValue.trim();
+        await handleSendMessage(toSend, attachedImage ?? undefined);
+
         setInputValue("");
         setAttachedImage(null);
         setPreviewUrl(null);
@@ -114,7 +128,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
         setAttachedImage(file);
         setPreviewUrl(URL.createObjectURL(file));
     };
-
 
     const sortAsc = (list: MessageModel[]) =>
         [...list].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
@@ -162,13 +175,13 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     }, [conversationId]);
 
     useEffect(() => {
-        // Reset when conversation changes
         setMessages([]);
         setBatch(0);
         setHasMore(true);
         setError(null);
         initialLoadedRef.current = false;
-    }, [conversationId]);
+        stop();
+    }, [conversationId, stop]);
 
     useEffect(() => {
         if (!initialLoadedRef.current && hasMore && !isLoading) {
@@ -222,7 +235,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                          className="h-8 w-8 rounded-full object-cover border border-gray-200"/>
                 )}
             </div>
-
         );
     }), [messages, currentUserId, userById]);
 
@@ -241,6 +253,14 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                             <div className="text-sm font-semibold">{title ?? "Conversation"}</div>
                             <div className="text-xs text-gray-500">{messages.length} messages</div>
                         </div>
+                        {/* Optional tiny toggle if you want a user gesture first
+                        <button
+                          onClick={() => setVoiceEnabled(v => !v)}
+                          className="text-xs px-2 py-1 border rounded"
+                        >
+                          {voiceEnabled ? "Animalese on" : "Animalese off"}
+                        </button>
+                        */}
                         <div className="flex -space-x-2 overflow-hidden">
                             {participants.slice(0, 5).map(p => (
                                 <img key={p.id} src={getProfilePictureUrlByUserId(p.id)}
@@ -272,7 +292,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                         <div className="text-center text-xs text-red-500 py-2">{error}</div>
                     )}
                 </div>
-
 
                 <div className="px-4 py-3 border-t border-gray-200 bg-white">
                     <form
