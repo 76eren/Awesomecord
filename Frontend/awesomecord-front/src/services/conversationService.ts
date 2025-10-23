@@ -18,3 +18,15 @@ export async function getConversationMessages(conversationId: string, batch: num
 export function getConversationImages(conversationId: string, imageHash: string) {
     return API_BASE_URL + "image/conversation/" + conversationId + "/image/" + imageHash;
 }
+
+export function SendMessageInConversation(conversationId: string, content?: string, image?: File) {
+    const formData = new FormData();
+    if (content) {
+        formData.append("message", content);
+    }
+    if (image) {
+        formData.append("image", image);
+    }
+
+    return apiFetch<void>(`conversation/${conversationId}/chat`, {method: "POST", body: formData});
+}

@@ -1,6 +1,10 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {MessageModel} from "../../Models/Conversation/message.model.ts";
-import {getConversationImages, getConversationMessages} from "../../services/conversationService.ts";
+import {
+    getConversationImages,
+    getConversationMessages,
+    SendMessageInConversation
+} from "../../services/conversationService.ts";
 import {useUserStore} from "../../store/userStore.ts";
 import {useConversationStore} from "../../store/conversationStore.ts";
 import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
@@ -16,15 +20,58 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     const conversation = useConversationStore((s) => s.conversations.find(c => c.id === conversationId));
 
     const [messages, setMessages] = useState<MessageModel[]>([]);
-    const [batch, setBatch] = useState<number>(1);
+    const [batch, setBatch] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const initialLoadedRef = useRef(false);
-
     const userById = useCallback((id: string) => convUsers.find((u) => u.id === id), [convUsers]);
+
+    const [inputValue, setInputValue] = useState("");
+    const [attachedImage, setAttachedImage] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const maxMessageLength = 2000;
+
+    const handleSendMessage = useCallback(async (body: string, image?: File) => {
+        try {
+            await SendMessageInConversation(conversationId, body, image);
+        } catch (err) {
+            console.error("Failed to send message:", err);
+        }
+    }, [conversationId]);
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (!inputValue.trim() && !attachedImage) return;
+            handleSubmit();
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!inputValue.trim() && !attachedImage) return;
+
+        await handleSendMessage(inputValue.trim(), attachedImage ?? undefined);
+        setInputValue("");
+        setAttachedImage(null);
+        setPreviewUrl(null);
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            alert("Only image files are allowed.");
+            return;
+        }
+
+        setAttachedImage(file);
+        setPreviewUrl(URL.createObjectURL(file));
+    };
+
 
     const sortAsc = (list: MessageModel[]) =>
         [...list].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
@@ -74,7 +121,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     useEffect(() => {
         // Reset when conversation changes
         setMessages([]);
-        setBatch(1);
+        setBatch(0);
         setHasMore(true);
         setError(null);
         initialLoadedRef.current = false;
@@ -83,7 +130,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     useEffect(() => {
         if (!initialLoadedRef.current && hasMore && !isLoading) {
             initialLoadedRef.current = true;
-            loadBatch(1, {prepend: false});
+            loadBatch(0, {prepend: false});
         }
     }, [hasMore, isLoading, loadBatch]);
 
@@ -132,6 +179,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                          className="h-8 w-8 rounded-full object-cover border border-gray-200"/>
                 )}
             </div>
+
         );
     }), [messages, currentUserId, userById]);
 
@@ -181,6 +229,75 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                         <div className="text-center text-xs text-red-500 py-2">{error}</div>
                     )}
                 </div>
+
+
+                <div className="px-4 py-3 border-t border-gray-200 bg-white">
+                    <form
+                        className="flex flex-col gap-2"
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSubmit();
+                        }}
+                    >
+                        {previewUrl && (
+                            <div className="relative w-fit">
+                                <img
+                                    src={previewUrl}
+                                    alt="Preview"
+                                    className="max-h-40 rounded-lg border border-gray-300 object-contain"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setAttachedImage(null);
+                                        setPreviewUrl(null);
+                                    }}
+                                    className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-gray-700"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="flex items-end gap-2">
+                            <label
+                                htmlFor="chat-image-upload"
+                                className="cursor-pointer p-2 text-gray-500 hover:text-indigo-600"
+                            >
+                                📎
+                                <input
+                                    id="chat-image-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                />
+                            </label>
+
+                            <textarea
+                                value={inputValue}
+                                onChange={(e) => {
+                                    if (e.target.value.length <= maxMessageLength) {
+                                        setInputValue(e.target.value);
+                                    }
+                                }}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Type a message… (Shift+Enter for new line)"
+                                rows={1}
+                                className="flex-1 resize-none px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm max-h-40 overflow-y-auto"
+                            />
+
+                            <button
+                                type="submit"
+                                disabled={!inputValue.trim() && !attachedImage}
+                                className="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                            >
+                                Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </div>
     );
