@@ -29,16 +29,11 @@ public sealed class CreateConversationHandler(
 
         if (existingConversation is null)
         {
-            var conversation = new Conversation
-            {
-                Id = Guid.NewGuid().ToString(),
-                CreatedAt = DateTime.UtcNow,
-                Participants = new List<ConversationParticipent>
-                {
-                    new() { UserId = request.UserIdA },
-                    new() { UserId = request.UserIdB }
-                }
-            };
+            // Todo: this can only add 2 people in a conversation. Need to extend for group chats
+            var conversation = Conversation.CreateDirect(
+                request.UserIdA,
+                request.UserIdB
+            );
 
             dbContext.Conversation.Add(conversation);
 

@@ -60,4 +60,15 @@ public class ImageController : BaseApiController
 
         return File(image, "image/png");
     }
+
+    [HttpGet("conversation/{conversationId}/image/{imageHash}")]
+    [Authorize]
+    public async Task<IActionResult> GetConversationImage(string conversationId, string imageHash, CancellationToken ct)
+    {
+        var image = await Mediator.Send(new GetConversationImage.Query(conversationId, imageHash), ct);
+        if (image is null || image.Length == 0)
+            return NotFound("Image not found.");
+
+        return File(image, "image/png");
+    }
 }

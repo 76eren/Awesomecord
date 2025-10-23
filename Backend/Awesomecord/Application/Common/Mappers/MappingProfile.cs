@@ -2,13 +2,15 @@
 using AutoMapper;
 using Domain;
 
-namespace Application.Users.Commands;
+namespace Application.Common.Mappers;
 
 public sealed class MappingProfile : Profile
 {
     public MappingProfile()
     {
         CreateMap<User, UserDto>();
+
+        CreateMap<Message, MessageDto>();
 
         CreateMap<Conversation, ConversationDto>()
             .ForMember(dest => dest.title,
