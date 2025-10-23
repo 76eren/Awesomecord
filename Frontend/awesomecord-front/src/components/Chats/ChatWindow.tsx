@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {MessageModel} from "../../Models/Conversation/message.model.ts";
-import {getConversationMessages} from "../../services/conversationService.ts";
+import {getConversationImages, getConversationMessages} from "../../services/conversationService.ts";
 import {useUserStore} from "../../store/userStore.ts";
 import {useConversationStore} from "../../store/conversationStore.ts";
 import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
@@ -120,8 +120,11 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                         <div className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.body}</div>
                     )}
                     {m.attachmentHash && (
-                        <div
-                            className="mt-2 text-xs italic opacity-80">Attachment: {m.attachmentHash.slice(0, 10)}…</div>
+                        <img
+                            src={getConversationImages(m.conversationId, m.attachmentHash)}
+                            alt="attachment"
+                            className="mt-2 max-w-[300px] max-h-[300px] object-contain rounded"
+                        />
                     )}
                 </div>
                 {mine && (
@@ -166,8 +169,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                     ref={containerRef}
                     onScroll={onScroll}
                     className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
-                    style={{scrollbarWidth: "thin"}}
-                >
+                    style={{scrollbarWidth: "thin"}}>
                     {rendered}
                     {isLoading && (
                         <div className="text-center text-xs text-gray-500 py-2">Loading…</div>
