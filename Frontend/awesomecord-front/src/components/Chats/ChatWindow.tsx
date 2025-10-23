@@ -46,7 +46,9 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
         letters: "abcdefghijklmnopqrstuvwxyz",
 
     });
-    const [voiceEnabled, setVoiceEnabled] = useState(true);
+
+    const voiceSetting = localStorage.getItem("chatVoiceEnabled");
+    const [voiceEnabled, setVoiceEnabled] = useState(voiceSetting === "true");
 
     useEffect(() => {
         let canceled = false;
@@ -243,6 +245,12 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
         return ids.map(id => ({id, user: userById(id)}));
     }, [conversation, userById]);
 
+    function switchVoice(enabled: Boolean) {
+        const next: boolean = typeof enabled === "boolean" ? enabled : !voiceEnabled;
+        setVoiceEnabled(next);
+        localStorage.setItem("chatVoiceEnabled", next.toString());
+    }
+
     return (
         <div className="flex h-full w-full">
             <div className="flex-1 flex flex-col bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
@@ -328,6 +336,14 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                                     className="hidden"
                                 />
                             </label>
+
+                            <button
+                                type="button"
+                                onClick={() => switchVoice(!voiceEnabled)}
+                                className="p-2 text-gray-500 hover:text-indigo-600"
+                            >
+                                {voiceEnabled ? "🔊" : "🔈"}
+                            </button>
 
                             <textarea
                                 value={inputValue}

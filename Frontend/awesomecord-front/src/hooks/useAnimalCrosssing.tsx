@@ -57,7 +57,7 @@ function frameEnergy(buf: Float32Array, start: number, len: number): number {
 }
 
 function resampleMono(channelData: Float32Array, inSr: number, outSr: number) {
-    if (outSr >= inSr) return channelData; // no need
+    if (outSr >= inSr) return channelData;
     const ratio = inSr / outSr;
     const outLen = Math.floor(channelData.length / ratio);
     const out = new Float32Array(outLen);
@@ -102,7 +102,7 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
         const maxE = Math.max(...energies, 1e-9);
         const norm = energies.map(e => e / maxE);
 
-        const thr = Math.max(opts.energyFloor, 0.05); // dynamic-ish threshold
+        const thr = Math.max(opts.energyFloor, 0.05);
         const minGapFrames = Math.round((opts.minSilenceMs / 1000) * sr / hop);
         const active: { startF: number; endF: number }[] = [];
         let inRegion = false, startF = 0;
@@ -119,7 +119,6 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
         }
         if (inRegion) active.push({startF, endF: norm.length - 1});
 
-        // merge close ones (less than minGapFrames apart)
         const merged: { startF: number; endF: number }[] = [];
         for (const seg of active) {
             if (!merged.length) {
@@ -137,7 +136,7 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
         const toTime = (f: number) => (f * hop) / sr;
         let regions = merged
             .map(({startF, endF}) => {
-                const start = Math.max(0, toTime(startF) - 0.002); // tiny headroom
+                const start = Math.max(0, toTime(startF) - 0.002);
                 const end = Math.min(buf.duration, toTime(endF) + (win / sr) + 0.002);
                 const duration = Math.max(0.02, end - start);
                 return {start, duration};
@@ -171,7 +170,6 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
         return regions.slice(0, want);
     }, [opts]);
 
-    // load + analyze once
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -268,7 +266,6 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
                 const idx = letters.indexOf(low);
                 if (idx >= 0 && idx < regions.length) region = regions[idx];
             }
-            // fallback to first region if no letter mapping
             if (!region) region = regions[0];
 
             const playbackRate =
