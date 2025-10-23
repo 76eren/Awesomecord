@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 
 type Region = { start: number; duration: number };
 
@@ -73,7 +73,9 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
     const bufferRef = useRef<AudioBuffer | null>(null);
     const regionsRef = useRef<Region[] | null>(null);
     const readyRef = useRef(false);
+    const [ready, setReady] = useState(false);
     const currentAbortRef = useRef<AbortController | null>(null);
+    const activeSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
 
     const ensureCtx = useCallback(async () => {
         if (!ctxRef.current) ctxRef.current = getAudioContext();
@@ -185,6 +187,7 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
                 regionsRef.current = regions;
                 opts.onAutoMap?.(regions);
                 readyRef.current = true;
+                setReady(true);
             } catch (e) {
                 console.error("useAnimaleseSpriteAuto: load/analyze failed", e);
             }
@@ -221,12 +224,37 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
         source.connect(gain);
         gain.connect(ctx.destination);
 
+        activeSourcesRef.current.add(source);
+        const cleanUpSource = () => {
+            try {
+                source.disconnect();
+            } catch {
+            }
+            activeSourcesRef.current.delete(source);
+        };
+        source.onended = cleanUpSource;
+
         source.start(when, region.start, Math.min(sliceDur, durSec * playbackRate));
         source.stop(when + durSec + 0.02);
         return durSec;
     }, []);
 
-    const stop = useCallback(() => currentAbortRef.current?.abort(), []);
+    const stop = useCallback(() => {
+        currentAbortRef.current?.abort();
+
+        const set = activeSourcesRef.current;
+        set.forEach(s => {
+            try {
+                s.stop();
+            } catch {
+            }
+            try {
+                s.disconnect();
+            } catch {
+            }
+        });
+        set.clear();
+    }, []);
 
     const speak = useCallback(async (text: string) => {
         if (!text) return;
@@ -288,5 +316,5 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
 
     useEffect(() => () => stop(), [stop]);
 
-    return {speak, stop, ready: readyRef.current} as const;
+    return {speak, stop, ready} as const;
 }

@@ -75,6 +75,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                     });
 
                     if (voiceEnabled && ready && msg.senderId !== currentUserId && msg.body) {
+                        stop();
                         speak(msg.body);
                     }
                 };
