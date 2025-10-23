@@ -8,6 +8,7 @@ import {
 import {useUserStore} from "../../store/userStore.ts";
 import {useConversationStore} from "../../store/conversationStore.ts";
 import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
+import {useSignalRStore} from "../../store/signalrStore.ts";
 
 type ChatWindowProps = {
     conversationId: string;
@@ -33,6 +34,48 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     const [attachedImage, setAttachedImage] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const maxMessageLength = 2000;
+
+    const ensure = useSignalRStore((s) => s.ensure);
+    const on = useSignalRStore((s) => s.on);
+
+    useEffect(() => {
+        let canceled = false;
+        let unsub: (() => void) | undefined;
+
+        (async () => {
+            try {
+                await ensure("messages");
+                if (canceled) return;
+
+                const handler = async (payload: any) => {
+                    const msg: MessageModel = payload?.messageModel ?? payload;
+                    if (!msg) return;
+
+                    if (msg.conversationId !== conversationId) return;
+
+                    setMessages((prev) => {
+                        if (prev.some(m => m.id === msg.id)) return prev;
+                        return [...prev, msg];
+                    });
+
+                    requestAnimationFrame(() => {
+                        const el = containerRef.current;
+                        if (el) el.scrollTop = el.scrollHeight;
+                    });
+                };
+
+                unsub = on("messages", "messages", handler);
+            } catch (e) {
+                console.error("[SignalR] start failed", e);
+            }
+        })();
+
+        return () => {
+            canceled = true;
+            if (unsub) unsub();
+        };
+    }, [ensure, on, conversationId]);
+
 
     const handleSendMessage = useCallback(async (body: string, image?: File) => {
         try {

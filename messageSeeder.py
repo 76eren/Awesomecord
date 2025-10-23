@@ -4,7 +4,7 @@ import random
 
 # Endpoints
 LOGIN_URL = "https://localhost:5041/api/v1/auth/login"
-CHAT_URL = "https://localhost:5041/api/v1/conversation/f0aa8865-412b-4456-871e-c66aeb43e880/chat"
+CHAT_URL = "https://localhost:5041/api/v1/conversation/3ddeaeb9-3513-4899-ab72-e8779bdf8c7e/chat"
 
 # Disable SSL warnings for localhost self-signed certs
 requests.packages.urllib3.disable_warnings()

@@ -122,6 +122,7 @@ builder.Services
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 builder.Services.AddScoped<IUserUpdatePublisher, SignalrUserUpdatePublisher>();
 builder.Services.AddScoped<IConversationUpdatePublisher, SignalrConversationUpdatePublisher>();
+builder.Services.AddScoped<IMessagePublisher, SignalrMessageService>();
 builder.Services.AddSingleton<IStorageService, MinioStorageService>();
 builder.Services.Configure<StorageOptions>(
     builder.Configuration.GetSection(StorageOptions.SectionName)
@@ -178,6 +179,7 @@ app.UseAuthorization();
 
 app.MapHub<UpdateOwnUserHub>("/hubs/userupdates");
 app.MapHub<UpdateConversationsHub>("/hubs/conversationupdates");
+app.MapHub<MessageHub>("/hubs/messages");
 
 app.MapControllers();
 

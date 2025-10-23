@@ -22,7 +22,8 @@ function App() {
     const hubs = useMemo(
         () => [
             {key: "userupdates", path: "hubs/userupdates"},
-            {key: "conversationupdate", path: "hubs/conversationupdates"}
+            {key: "conversationupdate", path: "hubs/conversationupdates"},
+            {key: "messages", path: "hubs/messages"},
         ],
         []
     );
