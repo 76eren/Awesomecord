@@ -9,7 +9,7 @@ public class Message
 
     public string AttachmentHash { get; private set; } = string.Empty;
 
-    public DateTimeOffset SentAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTime SentAt { get; private set; } = DateTime.UtcNow;
 
     public virtual Conversation Conversation { get; private set; } = default!;
     public virtual User Sender { get; private set; } = default!;

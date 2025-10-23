@@ -1,5 +1,6 @@
 using API.Contracts.Conversation;
 using API.Contracts.User;
+using API.Contracts.Message;
 using Application.DTOs;
 using AutoMapper;
 
@@ -24,5 +25,7 @@ public sealed class ApiMappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
 
         CreateMap<ConversationDto, GetConversationContract>();
+
+        CreateMap<MessageDto, MessageGetContract>();
     }
 }

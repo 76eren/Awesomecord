@@ -1,8 +1,10 @@
 ﻿using System.Security.Claims;
 using API.Contracts.Conversation;
+using API.Contracts.Message;
 using Application.CQRS.Conversations.Command;
 using Application.CQRS.Conversations.Query;
 using Application.CQRS.Messages.Commands;
+using Application.CQRS.Messages.Query;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -65,6 +67,32 @@ public class ConversationController : BaseApiController
         {
             await Mediator.Send(command, ct);
             return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+    
+    [HttpGet("{conversationId}/messages/{batch}")]
+    [Authorize]
+    public async Task<ActionResult<List<MessageGetContract>>> GetMessagesByConversation(String conversationId, int batch)
+    {
+        var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(user)) return Unauthorized();
+
+        var query = new GetMessagesByConversation.Query
+        {
+            ConversationId = conversationId,
+            UserId = user,
+            Batch = batch
+        };
+
+        try
+        {
+            var result = await Mediator.Send(query);
+            var toReturn = Mapper.Map<List<MessageGetContract>>(result);
+            return toReturn;
         }
         catch (Exception e)
         {
