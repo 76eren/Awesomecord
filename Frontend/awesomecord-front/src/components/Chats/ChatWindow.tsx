@@ -253,14 +253,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                             <div className="text-sm font-semibold">{title ?? "Conversation"}</div>
                             <div className="text-xs text-gray-500">{messages.length} messages</div>
                         </div>
-                        {/* Optional tiny toggle if you want a user gesture first
-                        <button
-                          onClick={() => setVoiceEnabled(v => !v)}
-                          className="text-xs px-2 py-1 border rounded"
-                        >
-                          {voiceEnabled ? "Animalese on" : "Animalese off"}
-                        </button>
-                        */}
+
                         <div className="flex -space-x-2 overflow-hidden">
                             {participants.slice(0, 5).map(p => (
                                 <img key={p.id} src={getProfilePictureUrlByUserId(p.id)}
