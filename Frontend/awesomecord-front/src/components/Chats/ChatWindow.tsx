@@ -10,7 +10,6 @@ import {useConversationStore} from "../../store/conversationStore.ts";
 import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
 import {useSignalRStore} from "../../store/signalrStore.ts";
 
-// ⬇️ use the sprite-based hook (same file path as your hook module)
 import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
 
 type ChatWindowProps = {
