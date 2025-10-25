@@ -10,6 +10,7 @@ public class Message
     public string AttachmentHash { get; private set; } = string.Empty;
 
     public DateTime SentAt { get; private set; } = DateTime.UtcNow;
+    public DateTime? EditedAt { get; set; }
 
     public virtual Conversation Conversation { get; private set; } = default!;
     public virtual User Sender { get; private set; } = default!;
@@ -28,5 +29,10 @@ public class Message
             Body = body,
             AttachmentHash = hash
         };
+    }
+
+    public void Edit(string newBody)
+    {
+        Body = newBody ?? string.Empty;
     }
 }

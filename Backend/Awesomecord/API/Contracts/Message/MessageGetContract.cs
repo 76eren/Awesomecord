@@ -8,4 +8,5 @@ public class MessageGetContract
     public string Body { get; set; }
     public string AttachmentHash { get; set; }
     public DateTimeOffset SentAt { get; set; }
+    public DateTime? EditedAt { get; set; }
 }

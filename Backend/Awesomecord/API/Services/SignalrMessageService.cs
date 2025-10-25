@@ -13,6 +13,12 @@ public class SignalrMessageService(IHubContext<MessageHub> hub) : IMessagePublis
             .SendAsync("messages", payload, cancellationToken);
     }
 
+    public Task MessageEditedAsync(string userId, MessageDto payload, CancellationToken cancellationToken)
+    {
+        return hub.Clients.User(userId)
+            .SendAsync("messageEdited", payload, cancellationToken);
+    }
+
     public Task MessageDeletedAsync(string userId, string messageId, string conversationId,
         CancellationToken cancellationToken)
     {

@@ -10,6 +10,12 @@ public interface IMessagePublisher
         CancellationToken cancellationToken
     );
 
+    Task MessageEditedAsync(
+        string userId,
+        MessageDto payload,
+        CancellationToken cancellationToken
+    );
+
     Task MessageDeletedAsync(
         string userId,
         string messageId,
