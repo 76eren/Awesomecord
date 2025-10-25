@@ -25,11 +25,7 @@ export default function Friends() {
             void fetchUser();
         }
     }, [user, isLoading, fetchUser]);
-
-
-    const handleMessage = (friend: Friend) => () => {
-        alert(`Start chat with ${friend.displayName}`);
-    };
+    
 
     const [input, setInput] = React.useState<string>("");
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
