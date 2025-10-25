@@ -101,6 +101,19 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
             } catch (e) {
                 console.error("[SignalR] start failed", e);
             }
+
+            try {
+                await ensure("messageEdited");
+                const handler = async (payload: any) => {
+                    const editedMessage: MessageModel = payload?.messageModel ?? payload;
+                    if (!editedMessage) return;
+
+                    setMessages((prev) => prev.map(m => m.id === editedMessage.id ? editedMessage : m));
+                }
+                unsub = on("messageEdited", "messageEdited", handler);
+            } catch (e) {
+                console.error("[SignalR] start failed", e);
+            }
         })();
 
         return () => {
@@ -456,7 +469,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                         setEditingMessage(null);
                     }}
                     onSaved={(newText) => {
-                        setMessages((prev) => prev.map(m => m.id === editingMessage.id ? {...m, body: newText} : m));
+                        // I could make the edit optimistic here, but SignalR will update it anyway
                     }}
                 />
             )}
