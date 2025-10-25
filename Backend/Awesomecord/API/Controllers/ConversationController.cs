@@ -15,12 +15,16 @@ namespace API.Controllers;
 public class ConversationController : BaseApiController
 {
     [Authorize]
-    [HttpPost("user/{recipientId}")]
-    public async Task<IActionResult> CreateConversation(string recipientId)
+    [HttpPost]
+    public async Task<IActionResult> CreateConversation([FromBody] CreateConversationContract contract)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
-        var command = new CreateConversationCommand(userId, recipientId);
+
+        if (contract?.userIds == null || contract.userIds.Count == 0)
+            return BadRequest("Provide the full list of participants as user IDs.");
+
+        var command = new CreateConversationCommand(userId, contract.userIds);
 
         try
         {

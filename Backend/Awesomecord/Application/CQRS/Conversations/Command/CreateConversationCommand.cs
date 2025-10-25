@@ -2,4 +2,4 @@
 
 namespace Application.CQRS.Conversations.Command;
 
-public sealed record CreateConversationCommand(string UserIdA, string UserIdB) : IRequest<Unit>;
+public sealed record CreateConversationCommand(string InitiatorUserId, IReadOnlyCollection<string> ParticipantUserIds) : IRequest<Unit>;

@@ -7,8 +7,11 @@ export async function getConversations() {
     return apiFetch<ConversationModel[]>("conversation", {method: "GET"});
 }
 
-export async function createConversation(targetUserId: string) {
-    return apiFetch<void>("conversation/user/" + targetUserId, {method: "POST"});
+export async function createConversation(targetUserIds: string[]) {
+    let body = {
+        "userIds": targetUserIds
+    }
+    return apiFetch<void>("conversation", {method: "POST", json: body});
 }
 
 export async function getConversationMessages(conversationId: string, batch: number) {
