@@ -5,5 +5,6 @@ export interface MessageModel {
     body: string;
     attachmentHash: string;
     sentAt: string;
+    updatedAt?: string;
 }
 
