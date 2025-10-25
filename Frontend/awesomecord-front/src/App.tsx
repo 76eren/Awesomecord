@@ -24,6 +24,7 @@ function App() {
             {key: "userupdates", path: "hubs/userupdates"},
             {key: "conversationupdate", path: "hubs/conversationupdates"},
             {key: "messages", path: "hubs/messages"},
+            {key: "messageDeleted", path: "hubs/messages"},
         ],
         []
     );

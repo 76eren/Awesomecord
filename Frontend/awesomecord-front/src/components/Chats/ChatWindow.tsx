@@ -83,6 +83,20 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
             } catch (e) {
                 console.error("[SignalR] start failed", e);
             }
+
+            try {
+                await ensure("messageDeleted");
+                const handler = async (payload: any) => {
+                    const deletedMessageId: string = payload?.id ?? payload;
+                    if (!deletedMessageId) return;
+
+                    setMessages((prev) => prev.filter(m => m.id !== deletedMessageId));
+                }
+
+                unsub = on("messageDeleted", "messageDeleted", handler);
+            } catch (e) {
+                console.error("[SignalR] start failed", e);
+            }
         })();
 
         return () => {
