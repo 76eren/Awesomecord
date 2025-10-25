@@ -23,7 +23,7 @@ export default function NewGroupChatModal({isOpen, onClose, onCreated}: NewGroup
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const canSubmit = useMemo(
-        () => selectedIds.length >= 1 && !submitting && title.trim().length > 0,
+        () => selectedIds.length > 1 && !submitting && title.trim().length > 0,
         [selectedIds, submitting, title]
     );
 
