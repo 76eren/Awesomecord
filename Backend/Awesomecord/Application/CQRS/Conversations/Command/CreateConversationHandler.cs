@@ -34,13 +34,10 @@ public sealed class CreateConversationHandler(
 
         if (existingConversation is null)
         {
-            var conversation = Conversation.Create(participantIds);
+            var conversation = Conversation.Create(participantIds, request.title);
             dbContext.Conversation.Add(conversation);
 
-            foreach (var uid in participantIds)
-            {
-                UpdateConversationsListParticipants(uid);
-            }
+            foreach (var uid in participantIds) UpdateConversationsListParticipants(uid);
 
             await dbContext.SaveChangesAsync(cancellationToken);
         }

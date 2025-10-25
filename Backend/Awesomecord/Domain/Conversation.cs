@@ -13,13 +13,7 @@ public class Conversation
 
     public virtual ICollection<Message> Messages { get; private set; } = new List<Message>();
 
-    public static Conversation Create(string userIdA, string userIdB)
-    {
-        // Keep legacy overload to avoid breaking existing callers
-        return Create(new[] { userIdA, userIdB });
-    }
-
-    public static Conversation Create(IEnumerable<string> participantUserIds)
+    public static Conversation Create(IEnumerable<string> participantUserIds, string title)
     {
         var ids = participantUserIds?.Where(id => !string.IsNullOrWhiteSpace(id))
             .Select(id => id.Trim())
@@ -27,13 +21,13 @@ public class Conversation
             .ToList() ?? new List<string>();
 
         if (ids.Count < 2)
-            throw new ArgumentException("At least two participants are required to create a conversation.", nameof(participantUserIds));
+            throw new ArgumentException("At least two participants are required to create a conversation.",
+                nameof(participantUserIds));
 
         var conv = new Conversation();
         foreach (var uid in ids)
-        {
             conv.Participants.Add(new ConversationParticipent { UserId = uid, ConversationId = conv.Id });
-        }
+        conv.Title = title;
         return conv;
     }
 }

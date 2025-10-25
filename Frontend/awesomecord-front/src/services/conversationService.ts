@@ -7,9 +7,12 @@ export async function getConversations() {
     return apiFetch<ConversationModel[]>("conversation", {method: "GET"});
 }
 
-export async function createConversation(targetUserIds: string[]) {
-    let body = {
-        "userIds": targetUserIds
+export async function createConversation(targetUserIds: string[], title?: string) {
+    const body: Record<string, unknown> = {
+        userIds: targetUserIds,
+    };
+    if (title && title.trim().length > 0) {
+        body.title = title.trim();
     }
     return apiFetch<void>("conversation", {method: "POST", json: body});
 }
