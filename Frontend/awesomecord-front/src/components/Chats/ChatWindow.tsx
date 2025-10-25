@@ -11,6 +11,8 @@ import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
 import {useSignalRStore} from "../../store/signalrStore.ts";
 
 import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
+import {deleteMessage} from "../../services/messageService.ts";
+import MessageEditDialog from "./MessageEditDialog.tsx";
 
 type ChatWindowProps = {
     conversationId: string;
@@ -39,12 +41,14 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
 
     const ensure = useSignalRStore((s) => s.ensure);
     const on = useSignalRStore((s) => s.on);
-
     const {speak, stop, ready} = useAnimaleseSpriteAuto({
         url: "/assets/animalCrossing/m1.ogg",
         letters: "abcdefghijklmnopqrstuvwxyz",
 
     });
+
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingMessage, setEditingMessage] = useState<MessageModel | null>(null);
 
     const voiceSetting = localStorage.getItem("chatVoiceEnabled");
     const [voiceEnabled, setVoiceEnabled] = useState(voiceSetting === "true");
@@ -80,6 +84,33 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                 };
 
                 unsub = on("messages", "messages", handler);
+            } catch (e) {
+                console.error("[SignalR] start failed", e);
+            }
+
+            try {
+                await ensure("messageDeleted");
+                const handler = async (payload: any) => {
+                    const deletedMessageId: string = payload?.id ?? payload;
+                    if (!deletedMessageId) return;
+
+                    setMessages((prev) => prev.filter(m => m.id !== deletedMessageId));
+                }
+
+                unsub = on("messageDeleted", "messageDeleted", handler);
+            } catch (e) {
+                console.error("[SignalR] start failed", e);
+            }
+
+            try {
+                await ensure("messageEdited");
+                const handler = async (payload: any) => {
+                    const editedMessage: MessageModel = payload?.messageModel ?? payload;
+                    if (!editedMessage) return;
+
+                    setMessages((prev) => prev.map(m => m.id === editedMessage.id ? editedMessage : m));
+                }
+                unsub = on("messageEdited", "messageEdited", handler);
             } catch (e) {
                 console.error("[SignalR] start failed", e);
             }
@@ -201,45 +232,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
         }
     }, [batch, hasMore, isLoading, loadBatch]);
 
-    const rendered = useMemo(() => messages.map((m) => {
-        const mine = m.senderId === currentUserId;
-        const user = userById(m.senderId);
-        const displayName = user?.displayName ?? `User ${m.senderId.slice(0, 6)}`;
-        const avatarUrl = getProfilePictureUrlByUserId(m.senderId);
-        const time = new Date(m.sentAt);
-        const timeStr = time.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
-
-        return (
-            <div key={m.id} className={`flex items-end gap-3 ${mine ? "justify-end" : "justify-start"}`}>
-                {!mine && (
-                    <img src={avatarUrl} alt={displayName}
-                         className="h-8 w-8 rounded-full object-cover border border-gray-200"/>
-                )}
-                <div
-                    className={`max-w-[75%] rounded-2xl px-3 py-2 shadow-sm ${mine ? "bg-indigo-600 text-white" : "bg-white text-gray-900 border border-gray-200"}`}>
-                    <div className="flex items-baseline gap-2">
-                        {!mine && <span className="text-xs font-semibold text-gray-700">{displayName}</span>}
-                        <span className={`text-[10px] ${mine ? "text-indigo-100" : "text-gray-400"}`}>{timeStr}</span>
-                    </div>
-                    {m.body && (
-                        <div className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.body}</div>
-                    )}
-                    {m.attachmentHash && (
-                        <img
-                            src={getConversationImages(m.conversationId, m.attachmentHash)}
-                            alt="attachment"
-                            className="mt-2 max-w-[300px] max-h-[300px] object-contain rounded"
-                        />
-                    )}
-                </div>
-                {mine && (
-                    <img src={avatarUrl} alt="You"
-                         className="h-8 w-8 rounded-full object-cover border border-gray-200"/>
-                )}
-            </div>
-        );
-    }), [messages, currentUserId, userById]);
-
     const participants = useMemo(() => {
         const ids = conversation?.participantIds ?? [];
         return ids.map(id => ({id, user: userById(id)}));
@@ -251,10 +243,120 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
         localStorage.setItem("chatVoiceEnabled", next.toString());
     }
 
+    async function handleDeleteMessage(id: string) {
+        await deleteMessage(id);
+    }
+
+
+    const rendered = useMemo(() => messages.map((m) => {
+        const mine = m.senderId === currentUserId;
+        const user = userById(m.senderId);
+        const displayName = user?.displayName ?? `User ${m.senderId.slice(0, 6)}`;
+        const avatarUrl = getProfilePictureUrlByUserId(m.senderId);
+        const time = new Date(m.sentAt);
+        const timeStr = time.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+
+        return (
+            <div
+                key={m.id}
+                className={`relative group flex items-end gap-3 ${mine ? "justify-end" : "justify-start"}`}
+            >
+                {mine && (
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => handleDeleteMessage(m.id)}
+                            className="absolute -top-6 right-10 invisible group-hover:visible focus:opacity-100
+                        pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto
+                        transition-opacity bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300
+                        shadow-sm rounded-full px-2 py-1 text-xs"
+                            title="Delete message"
+                            aria-label="Delete message"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                 className="h-4 w-4">
+                                <path
+                                    d="M9 3a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7h.5a1 1 0 1 0 0-2H16V4a1 1 0 0 0-1-1H9zm2 2h2v1h-2V5zM9 9a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1zm5 0a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1z"/>
+                            </svg>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setEditingMessage(m);
+                                setDialogOpen(true);
+                            }}
+                            className="
+                            absolute -top-6 right-20 invisible group-hover:visible focus:opacity-100
+                            pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto
+                            transition-opacity bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300
+                            shadow-sm rounded-full px-2 py-1 text-xs"
+                            title="Edit message"
+                            aria-label="Edit message"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4"
+                                 fill="currentColor" aria-hidden="true">
+                                <path
+                                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+                            </svg>
+                        </button>
+
+
+                    </div>
+
+
+                )}
+
+                {!mine && (
+                    <img src={avatarUrl} alt={displayName}
+                         className="h-8 w-8 rounded-full object-cover border border-gray-200"/>
+                )}
+
+                <div
+                    className={`max-w-[75%] rounded-2xl px-3 py-2 shadow-sm ${mine ? "bg-indigo-600 text-white" : "bg-white text-gray-900 border border-gray-200"}`}
+                >
+                    <div className="flex items-baseline gap-2">
+                        {!mine && <span className="text-xs font-semibold text-gray-700">{displayName}</span>}
+                        <span
+                            className={`text-[10px] ${mine ? "text-indigo-100" : "text-gray-400"}`}>{time.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        })}</span>
+                    </div>
+
+                    {m.body && (
+                        <>
+                            <div className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.body}</div>
+                            {m.editedAt != null && m.editedAt !== "" && (
+                                <span
+                                    className={`text-[10px] ${mine ? "text-indigo-100" : "text-gray-400"}`}>Edited at {new Date(m.editedAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                })}</span>
+                            )}
+                        </>
+                    )}
+
+                    {m.attachmentHash && (
+                        <img
+                            src={getConversationImages(m.conversationId, m.attachmentHash)}
+                            alt="attachment"
+                            className="mt-2 max-w-[300px] max-h-[300px] object-contain rounded"
+                        />
+                    )}
+                </div>
+
+                {mine && (
+                    <img src={avatarUrl} alt="You"
+                         className="h-8 w-8 rounded-full object-cover border border-gray-200"/>
+                )}
+            </div>
+        );
+    }), [messages, currentUserId, userById]);
+
     return (
         <div className="flex h-full w-full">
             <div className="flex-1 flex flex-col bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
-
                 <div className="px-4 py-3 border-b border-gray-200 bg-white">
                     <div className="flex items-center justify-between">
                         <div>
@@ -368,8 +470,23 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                         </div>
                     </form>
                 </div>
-
             </div>
+
+            {editingMessage && (
+                <MessageEditDialog
+                    open={dialogOpen}
+                    messageId={editingMessage.id}
+                    initialValue={editingMessage.body ?? ""}
+                    onClose={() => {
+                        setDialogOpen(false);
+                        setEditingMessage(null);
+                    }}
+                    onSaved={(newText) => {
+                        // I could make the edit optimistic here, but SignalR will update it anyway
+                    }}
+                />
+            )}
+
         </div>
     );
 }
