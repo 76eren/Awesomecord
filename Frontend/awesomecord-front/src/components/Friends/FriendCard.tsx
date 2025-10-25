@@ -34,7 +34,7 @@ export default function FriendCard(props: FriendCardProps) {
     }
 
     async function startConversation() {
-        let id = props.friendId;
+        let id = [props.friendId];
         createConversation(id).then(() => {
             window.location.href = `/chats`;
         }).catch(() => {

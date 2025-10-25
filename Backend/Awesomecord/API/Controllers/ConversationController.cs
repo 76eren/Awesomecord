@@ -15,12 +15,16 @@ namespace API.Controllers;
 public class ConversationController : BaseApiController
 {
     [Authorize]
-    [HttpPost("user/{recipientId}")]
-    public async Task<IActionResult> CreateConversation(string recipientId)
+    [HttpPost]
+    public async Task<IActionResult> CreateConversation([FromBody] CreateConversationContract contract)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
-        var command = new CreateConversationCommand(userId, recipientId);
+
+        if (contract?.userIds == null || contract.userIds.Count == 0)
+            return BadRequest("Provide the full list of participants as user IDs.");
+
+        var command = new CreateConversationCommand(userId, contract.userIds, contract.title);
 
         try
         {
@@ -57,7 +61,7 @@ public class ConversationController : BaseApiController
         if (string.IsNullOrWhiteSpace(message) && image == null)
             return BadRequest("At least a message, image or both is required.");
 
-        
+
         var imageStream = image?.OpenReadStream();
         var contentType = image?.ContentType;
         var fileName = image?.FileName;
@@ -73,10 +77,11 @@ public class ConversationController : BaseApiController
             return BadRequest(e.Message);
         }
     }
-    
+
     [HttpGet("{conversationId}/messages/{batch}")]
     [Authorize]
-    public async Task<ActionResult<List<MessageGetContract>>> GetMessagesByConversation(String conversationId, int batch)
+    public async Task<ActionResult<List<MessageGetContract>>> GetMessagesByConversation(string conversationId,
+        int batch)
     {
         var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(user)) return Unauthorized();

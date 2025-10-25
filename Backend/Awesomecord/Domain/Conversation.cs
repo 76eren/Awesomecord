@@ -13,11 +13,21 @@ public class Conversation
 
     public virtual ICollection<Message> Messages { get; private set; } = new List<Message>();
 
-    public static Conversation CreateDirect(string userIdA, string userIdB)
+    public static Conversation Create(IEnumerable<string> participantUserIds, string title)
     {
+        var ids = participantUserIds?.Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim())
+            .Distinct()
+            .ToList() ?? new List<string>();
+
+        if (ids.Count < 2)
+            throw new ArgumentException("At least two participants are required to create a conversation.",
+                nameof(participantUserIds));
+
         var conv = new Conversation();
-        conv.Participants.Add(new ConversationParticipent { UserId = userIdA, ConversationId = conv.Id });
-        conv.Participants.Add(new ConversationParticipent { UserId = userIdB, ConversationId = conv.Id });
+        foreach (var uid in ids)
+            conv.Participants.Add(new ConversationParticipent { UserId = uid, ConversationId = conv.Id });
+        conv.Title = title;
         return conv;
     }
 }

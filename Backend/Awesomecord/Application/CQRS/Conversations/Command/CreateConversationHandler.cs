@@ -9,36 +9,35 @@ namespace Application.CQRS.Conversations.Command;
 
 public sealed class CreateConversationHandler(
     AppDbContext dbContext,
-    IConversationUpdatePublisher _conversationUpdatePublisher,
-    IMediator _mediator
+    IConversationUpdatePublisher conversationUpdatePublisher,
+    IMediator mediator
 ) : IRequestHandler<CreateConversationCommand, Unit>
 {
     public async Task<Unit> Handle(CreateConversationCommand request, CancellationToken cancellationToken)
     {
-        var userA = dbContext.Users.FirstOrDefaultAsync(u => u.Id == request.UserIdA, cancellationToken);
-        var userB = dbContext.Users.FirstOrDefaultAsync(u => u.Id == request.UserIdB, cancellationToken);
+        var participantIds = new HashSet<string>(request.ParticipantUserIds.Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim()));
+        participantIds.Add(request.InitiatorUserId);
 
-        if (await userA is null || await userB is null) throw new Exception("One or both users do not exist.");
+        if (participantIds.Count < 2)
+            throw new Exception("At least two distinct users are required to create a conversation.");
 
-        // Check if a conversation already exists between the two users
+        var usersCount = await dbContext.Users.CountAsync(u => participantIds.Contains(u.Id), cancellationToken);
+        if (usersCount != participantIds.Count)
+            throw new Exception("One or more users do not exist.");
+
+        var expectedCount = participantIds.Count;
         var existingConversation = await dbContext.Conversation
-            .FirstOrDefaultAsync(c =>
-                    c.Participants.Any(p => p.UserId == request.UserIdA) &&
-                    c.Participants.Any(p => p.UserId == request.UserIdB),
-                cancellationToken);
+            .Where(c => c.Participants.Count() == expectedCount)
+            .Where(c => c.Participants.All(p => participantIds.Contains(p.UserId)))
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (existingConversation is null)
         {
-            // Todo: this can only add 2 people in a conversation. Need to extend for group chats
-            var conversation = Conversation.CreateDirect(
-                request.UserIdA,
-                request.UserIdB
-            );
-
+            var conversation = Conversation.Create(participantIds, request.title);
             dbContext.Conversation.Add(conversation);
 
-            UpdateConversationsListParticipants(request.UserIdA);
-            UpdateConversationsListParticipants(request.UserIdB);
+            foreach (var uid in participantIds) UpdateConversationsListParticipants(uid);
 
             await dbContext.SaveChangesAsync(cancellationToken);
         }
@@ -55,10 +54,10 @@ public sealed class CreateConversationHandler(
                 User = userId
             };
 
-            var conversations = await _mediator.Send(query);
-            await _conversationUpdatePublisher.ConversationsUpdatedAsync(userId, conversations);
+            var conversations = await mediator.Send(query);
+            await conversationUpdatePublisher.ConversationsUpdatedAsync(userId, conversations);
         }
-        catch (Exception e)
+        catch
         {
         }
     }
