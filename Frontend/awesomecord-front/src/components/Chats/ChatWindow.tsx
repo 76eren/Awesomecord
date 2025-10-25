@@ -317,11 +317,24 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                 >
                     <div className="flex items-baseline gap-2">
                         {!mine && <span className="text-xs font-semibold text-gray-700">{displayName}</span>}
-                        <span className={`text-[10px] ${mine ? "text-indigo-100" : "text-gray-400"}`}>{timeStr}</span>
+                        <span
+                            className={`text-[10px] ${mine ? "text-indigo-100" : "text-gray-400"}`}>{time.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        })}</span>
                     </div>
 
                     {m.body && (
-                        <div className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.body}</div>
+                        <>
+                            <div className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.body}</div>
+                            {m.editedAt != null && m.editedAt !== "" && (
+                                <span
+                                    className={`text-[10px] ${mine ? "text-indigo-100" : "text-gray-400"}`}>Edited at {new Date(m.editedAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                })}</span>
+                            )}
+                        </>
                     )}
 
                     {m.attachmentHash && (
