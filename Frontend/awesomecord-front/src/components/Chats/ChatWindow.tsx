@@ -11,9 +11,8 @@ import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
 import {useSignalRStore} from "../../store/signalrStore.ts";
 
 import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
-import {deleteMessage, editMessage} from "../../services/messageService.ts";
-import {Dialog} from "@base-ui-components/react/dialog";
-import {AlertDialog} from "@base-ui-components/react/alert-dialog";
+import {deleteMessage} from "../../services/messageService.ts";
+import MessageEditDialog from "./MessageEditDialog.tsx";
 
 type ChatWindowProps = {
     conversationId: string;
@@ -49,8 +48,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     });
 
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [confirmationOpen, setConfirmationOpen] = useState(false);
-    const [textareaValue, setTextareaValue] = useState('');
     const [editingMessage, setEditingMessage] = useState<MessageModel | null>(null);
 
     const voiceSetting = localStorage.getItem("chatVoiceEnabled");
@@ -274,7 +271,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                             type="button"
                             onClick={() => {
                                 setEditingMessage(m);
-                                setTextareaValue(m.body ?? '');
                                 setDialogOpen(true);
                             }}
                             className="
@@ -331,108 +327,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
             </div>
         );
     }), [messages, currentUserId, userById]);
-
-    function getDialog() {
-        return (
-            <Dialog.Root
-                open={dialogOpen}
-                onOpenChange={(open) => {
-                    if (!open && textareaValue) {
-                        setConfirmationOpen(true);
-                    } else {
-                        if (!open) {
-                            setEditingMessage(null);
-                            setTextareaValue('');
-                        }
-                        setDialogOpen(open);
-                    }
-                }}
-            >
-
-                <Dialog.Portal>
-                    <Dialog.Backdrop
-                        className="fixed inset-0 min-h-dvh bg-black opacity-20 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 dark:opacity-70 supports-[-webkit-touch-callout:none]:absolute"/>
-                    <Dialog.Popup
-                        className="fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 -mt-8 w-96 max-w-[calc(100vw-3rem)] -translate-x-1/2 -translate-y-1/2 scale-[calc(1-0.1*var(--nested-dialogs))] rounded-lg bg-gray-50 p-6 text-gray-900 outline outline-1 outline-gray-200 transition-all duration-150 data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[nested-dialog-open]:after:absolute data-[nested-dialog-open]:after:inset-0 data-[nested-dialog-open]:after:rounded-[inherit] data-[nested-dialog-open]:after:bg-black/5 data-[starting-style]:scale-90 data-[starting-style]:opacity-0 dark:outline-gray-300">
-                        <Dialog.Title className="-mt-1.5 mb-1 text-lg font-medium">Edit message</Dialog.Title>
-
-                        <form
-                            className="mt-4 flex flex-col gap-6"
-                            onSubmit={async (e) => {
-                                e.preventDefault();
-                                if (!editingMessage) return;
-
-                                const newContent = textareaValue.trim();
-                                if (newContent && newContent !== editingMessage.body) {
-                                    try {
-                                        await editMessage(editingMessage.id, newContent);
-                                    } catch (err) {
-                                        console.error("Failed to edit message:", err);
-                                        return;
-                                    }
-                                }
-
-                                setDialogOpen(false);
-                            }}
-                        >
-        <textarea
-            required
-            className="min-h-48 w-full rounded-md border border-gray-200 px-3.5 py-2 text-base text-gray-900 focus:outline focus:outline-2 focus:-outline-offset-1 focus:outline-blue-800"
-            placeholder="Update your message…"
-            value={textareaValue}
-            onChange={(e) => setTextareaValue(e.target.value)}
-        />
-
-                            <div className="flex justify-end gap-4">
-                                <Dialog.Close
-                                    className="flex h-10 items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-3.5 text-base font-medium text-gray-900 select-none hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-blue-800 active:bg-gray-100">
-                                    Cancel
-                                </Dialog.Close>
-                                <button
-                                    type="submit"
-                                    className="flex h-10 items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-3.5 text-base font-medium text-gray-900 select-none hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-blue-800 active:bg-gray-100"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </form>
-                    </Dialog.Popup>
-                </Dialog.Portal>
-
-                <AlertDialog.Root open={confirmationOpen} onOpenChange={setConfirmationOpen}>
-                    <AlertDialog.Portal>
-                        <AlertDialog.Popup
-                            className="fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 -mt-8 w-96 max-w-[calc(100vw-3rem)] -translate-x-1/2 -translate-y-1/2 scale-[calc(1-0.1*var(--nested-dialogs))] rounded-lg bg-gray-50 p-6 text-gray-900 outline outline-1 outline-gray-200 transition-all duration-150 data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[nested-dialog-open]:after:absolute data-[nested-dialog-open]:after:inset-0 data-[nested-dialog-open]:after:rounded-[inherit] data-[nested-dialog-open]:after:bg-black/5 data-[starting-style]:scale-90 data-[starting-style]:opacity-0 dark:outline-gray-300">
-                            <AlertDialog.Title className="-mt-1.5 mb-1 text-lg font-medium">Discard
-                                changes?</AlertDialog.Title>
-                            <AlertDialog.Description className="mb-6 text-base text-gray-600">
-                                Your edits will be lost.
-                            </AlertDialog.Description>
-                            <div className="flex items-center justify-end gap-4">
-                                <AlertDialog.Close
-                                    className="flex h-10 items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-3.5 text-base font-medium text-gray-900 select-none hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-blue-800 active:bg-gray-100">
-                                    Go back
-                                </AlertDialog.Close>
-                                <button
-                                    type="button"
-                                    className="flex h-10 items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-3.5 text-base font-medium text-gray-900 select-none hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-blue-800 active:bg-gray-100"
-                                    onClick={() => {
-                                        setConfirmationOpen(false);
-                                        setDialogOpen(false);
-                                        setEditingMessage(null);
-                                        setTextareaValue('');
-                                    }}
-                                >
-                                    Discard
-                                </button>
-                            </div>
-                        </AlertDialog.Popup>
-                    </AlertDialog.Portal>
-                </AlertDialog.Root>
-            </Dialog.Root>
-        )
-
-    }
 
     return (
         <div className="flex h-full w-full">
@@ -552,7 +446,20 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                 </div>
             </div>
 
-            {getDialog()}
+            {editingMessage && (
+                <MessageEditDialog
+                    open={dialogOpen}
+                    messageId={editingMessage.id}
+                    initialValue={editingMessage.body ?? ""}
+                    onClose={() => {
+                        setDialogOpen(false);
+                        setEditingMessage(null);
+                    }}
+                    onSaved={(newText) => {
+                        setMessages((prev) => prev.map(m => m.id === editingMessage.id ? {...m, body: newText} : m));
+                    }}
+                />
+            )}
 
         </div>
     );
