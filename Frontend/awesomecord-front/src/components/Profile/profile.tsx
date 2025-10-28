@@ -3,7 +3,7 @@ import {useUserStore} from "../../store/userStore.ts";
 import {useEffect, useState} from "react";
 import Cropper from "react-easy-crop";
 import {setProfilePicture} from "../../services/userService.ts";
-import {toast, ToastContainer} from "react-toastify";
+import {toast} from "react-toastify";
 
 export default function Profile() {
     const user = useUserStore((s) => s.user);
@@ -94,13 +94,8 @@ export default function Profile() {
         try {
             const croppedFile = new File([croppedBlob], selectedFile.name, {type: "image/jpeg"});
 
-            await setProfilePicture(croppedFile)
-                .then(() => {
-                    toast.success("Profile picture updated successfully!");
-                })
-                .catch((err) => {
-                    toast.error("Failed to update profile picture: " + err.message);
-                })
+            await setProfilePicture(croppedFile);
+            toast.success("Profile picture updated successfully!");
 
         } catch (err) {
             console.error("Failed to upload profile picture:", err);
@@ -120,7 +115,6 @@ export default function Profile() {
     return (
         <div className="min-h-screen flex bg-white">
             <Navbar/>
-            <ToastContainer/>
             <main className="flex-1 flex justify-center items-center p-6">
                 <div className="w-full max-w-lg bg-white shadow-md rounded-2xl p-8 border border-gray-100">
                     <div className="flex flex-col items-center text-center">

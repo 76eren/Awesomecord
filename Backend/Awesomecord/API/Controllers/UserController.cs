@@ -1,4 +1,5 @@
 ﻿using API.Contracts.User;
+using Application.Common.Exceptions;
 using Application.CQRS.Users.Queries;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +15,6 @@ public sealed class UserController : BaseApiController
     [HttpGet("{id}")]
     public async Task<ActionResult<GetUserResponseNoSensitiveDataResponse>> GetById(string id, CancellationToken ct)
     {
-        // Todo: this contains no error handling, should probably return 404 if user not found
         var result = await Mediator.Send(new GetUserById.Query { Id = id }, ct);
         var responseResponseNoSensitiveDataResponse = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
         return Ok(responseResponseNoSensitiveDataResponse);
@@ -33,9 +33,10 @@ public sealed class UserController : BaseApiController
                     Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
                 results.Add(responseResponseNoSensitiveDataResponse);
             }
-            catch (Exception ex)
+            catch (UserNotFoundException)
             {
-            } // Ignore users that are not found
+                // Ignore users that are not found
+            }
 
         return results;
     }

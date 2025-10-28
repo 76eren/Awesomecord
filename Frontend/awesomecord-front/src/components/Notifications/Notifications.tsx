@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import Navbar from "../Navbar/Navbar";
-import {toast, ToastContainer} from "react-toastify";
+import {toast} from "react-toastify";
 import {NotificationCard} from "./NotificationCard";
 import {acceptFriendRequest, cancelFriendRequest, denyFriendRequest} from "../../services/friendService.ts";
 import {useUserStore} from "../../store/userStore";
@@ -27,7 +27,7 @@ export default function Notifications() {
             toast.success(`Accepted ${handle}`);
         } catch (e) {
             console.error(e);
-            toast.error("Failed to accept request.");
+            // Error toast handled centrally in apiFetch
         } finally {
             setProcessing((p) => ({...p, [handle]: false}));
         }
@@ -41,7 +41,6 @@ export default function Notifications() {
             toast.success(`Denied ${handle}`);
         } catch (e) {
             console.error(e);
-            toast.error("Failed to deny request.");
         } finally {
             setProcessing((p) => ({...p, [handle]: false}));
         }
@@ -55,7 +54,6 @@ export default function Notifications() {
             toast.success(`Canceled ${handle}`);
         } catch (e) {
             console.error(e);
-            toast.error("Failed to cancel request.");
         } finally {
             setProcessing((p) => ({...p, [handle]: false}));
         }
@@ -70,7 +68,6 @@ export default function Notifications() {
 
     return (
         <>
-            <ToastContainer/>
             <div className="min-h-screen flex bg-gray-50">
                 <Navbar/>
                 <main className="flex-1 p-6">

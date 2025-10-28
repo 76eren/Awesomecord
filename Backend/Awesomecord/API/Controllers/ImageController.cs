@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using Application.Common.Exceptions;
 using Application.CQRS.Images;
 using Application.CQRS.Images.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -19,28 +18,17 @@ public class ImageController : BaseApiController
     public async Task<IActionResult> UploadProfilePicture([FromForm] IFormFile file, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
-            return BadRequest("No file uploaded.");
+            return BadRequestProblem("No file", "No file uploaded.");
 
         await using var stream = file.OpenReadStream();
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId)) return UnauthorizedProblem();
 
         var command = new UploadProfilePictureCommand(file.FileName, file.ContentType, userId, stream);
 
-        try
-        {
-            var hash = await Mediator.Send(command, ct);
-            return Ok(new { hash });
-        }
-        catch (UserNotFoundException e)
-        {
-            return NotFound("Please login again.");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
+        var hash = await Mediator.Send(command, ct);
+        return Ok(new { hash });
     }
 
     [HttpGet("profile")]
@@ -51,12 +39,12 @@ public class ImageController : BaseApiController
         var user = userId ?? userHandle;
 
         if (string.IsNullOrEmpty(user))
-            return BadRequest("Either userId or userHandle must be provided.");
+            return BadRequestProblem("Missing parameter", "Either userId or userHandle must be provided.");
 
         var image = await Mediator.Send(new GetProfilePicture.Query(user), ct);
 
         if (image is null || image.Length == 0)
-            return NotFound("Profile picture not found.");
+            return NotFoundProblem("Profile picture not found", "Profile picture not found.");
 
         return File(image, "image/png");
     }
@@ -67,7 +55,7 @@ public class ImageController : BaseApiController
     {
         var image = await Mediator.Send(new GetConversationImage.Query(conversationId, imageHash), ct);
         if (image is null || image.Length == 0)
-            return NotFound("Image not found.");
+            return NotFoundProblem("Image not found", "Image not found.");
 
         return File(image, "image/png");
     }

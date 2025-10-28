@@ -18,8 +18,6 @@ public class FriendRequest
 
     public static FriendRequest Create(string requesterId, string recipientId)
     {
-        if (requesterId == recipientId) throw new ArgumentException("Cannot send friend request to yourself.");
-
         return new FriendRequest
         {
             RequesterId = requesterId,

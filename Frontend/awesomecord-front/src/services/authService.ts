@@ -13,7 +13,8 @@ export async function loginUser(userLoginModel: UserLoginModel) {
 }
 
 export async function me() {
-    return apiFetch<UserModel>("auth/me", {method: "GET"});
+    // Suppress toast on 401 for silent session checks
+    return apiFetch<UserModel>("auth/me", {method: "GET", suppressErrorToast: true});
 }
 
 export async function logout() {
@@ -22,5 +23,6 @@ export async function logout() {
 
 // Todo: get rid of this the me endpoint already does that
 export async function isAuthenticated() {
-    return apiFetch<void>("auth/authenticated", {method: "GET"});
+    // Suppress toast on 401 for silent auth checks
+    return apiFetch<void>("auth/authenticated", {method: "GET", suppressErrorToast: true});
 }

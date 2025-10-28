@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using API.Hubs;
+using API.Middleware;
 using API.Services;
 using Application.CQRS.Users.Commands;
 using Application.Interfaces;
@@ -167,6 +168,8 @@ var fh = new ForwardedHeadersOptions
 fh.KnownNetworks.Clear();
 fh.KnownProxies.Clear();
 app.UseForwardedHeaders(fh);
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

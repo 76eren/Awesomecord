@@ -29,16 +29,20 @@ export default function FriendCard(props: FriendCardProps) {
     }
 
     async function deleteFriend(friendId: string) {
-        await deleteFriendFromFriendslist(friendId);
-        toast.success("Friend deleted");
+        try {
+            await deleteFriendFromFriendslist(friendId);
+            toast.success("Friend deleted");
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     async function startConversation() {
         let id = [props.friendId];
         createConversation(id).then(() => {
             window.location.href = `/chats`;
-        }).catch(() => {
-            toast.error("Failed to start conversation");
+        }).catch((e) => {
+            console.error(e);
         });
     }
 
@@ -83,7 +87,7 @@ export default function FriendCard(props: FriendCardProps) {
                         type="button"
                         className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 bg-red-600 text-white hover:bg-red-800"
                         onClick={() => {
-                            deleteFriend(friend.id)
+                            void deleteFriend(friend.id)
                         }}
                     >
                         Remove friend
