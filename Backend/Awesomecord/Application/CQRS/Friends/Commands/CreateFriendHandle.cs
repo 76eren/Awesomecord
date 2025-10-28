@@ -60,6 +60,8 @@ public sealed class CreateFriendHandle(AppDbContext db, IUserUpdatePublisher not
             return new FriendRequestDto(request.SenderHandle, request.ReceiverHandle);
         }
 
+        if (sender.Id == receiver.Id) throw new CannotFriendYourselfException();
+
         var newReq = FriendRequest.Create(sender.Id, receiver.Id);
         db.Add(newReq);
         await db.SaveChangesAsync(ct);

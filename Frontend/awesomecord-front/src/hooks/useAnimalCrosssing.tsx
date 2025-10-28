@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {toast} from "react-toastify";
 
 type Region = { start: number; duration: number };
 
@@ -190,6 +191,7 @@ export function useAnimaleseSpriteAuto(partial?: SpriteAutoOptions) {
                 setReady(true);
             } catch (e) {
                 console.error("useAnimaleseSpriteAuto: load/analyze failed", e);
+                toast.error("Failed to load audio sprite. Some sounds may be unavailable.");
             }
         })();
         return () => {

@@ -1,6 +1,6 @@
 import "./Login.css";
-import {useState} from "react";
 import * as React from "react";
+import {useState} from "react";
 import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
 import {loginUser} from "../../services/authService.ts";
 import {toast} from "react-toastify";
@@ -45,7 +45,6 @@ export default function Login() {
                 window.location.href = "/login";
             }, 700);
         } catch (error: any) {
-            toast(error.message);
         }
     };
 
@@ -53,7 +52,7 @@ export default function Login() {
         <div className="flex flex-col md:flex-row min-h-screen w-screen bg-gray-800">
             <div
                 className="hidden md:block md:w-2/3 bg-cover bg-center"
-                style={{ backgroundImage: `url(${grapeHyacinth})` }}
+                style={{backgroundImage: `url(${grapeHyacinth})`}}
                 aria-hidden="true"
             />
             <div className="w-full md:w-1/3 flex flex-col justify-center items-center min-h-screen bg-gray-800">

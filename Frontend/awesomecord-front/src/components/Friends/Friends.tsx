@@ -3,7 +3,7 @@ import Navbar from "../Navbar/Navbar.tsx";
 import FriendCard from "./FriendCard";
 import type {CreateFriendRequestModel} from "../../Models/friend/createFriendRequest.model.ts";
 import {initiateFriendRequest} from "../../services/friendService.ts";
-import {toast, ToastContainer} from "react-toastify";
+import {toast} from "react-toastify";
 import {useUserStore} from "../../store/userStore.ts";
 
 type Friend = {
@@ -25,7 +25,7 @@ export default function Friends() {
             void fetchUser();
         }
     }, [user, isLoading, fetchUser]);
-    
+
 
     const [input, setInput] = React.useState<string>("");
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +45,6 @@ export default function Friends() {
             toast.success("Friend successfully!");
             setInput("");
         } catch (error) {
-            toast.error("Failed to send friend request.");
         }
     }
 
@@ -56,7 +55,6 @@ export default function Friends() {
 
     return (
         <>
-            <ToastContainer/>
             <div className="min-h-screen flex bg-gray-50">
                 <Navbar/>
                 <main className="flex-1 p-6 flex flex-col h-screen max-h-screen">

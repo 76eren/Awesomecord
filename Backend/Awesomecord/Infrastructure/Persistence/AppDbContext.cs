@@ -104,6 +104,11 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             b.HasIndex(x => new { x.ConversationId, x.SentAt });
             b.Property(x => x.Body).IsRequired().HasMaxLength(4000);
             b.Property(x => x.SentAt).HasPrecision(0);
+            b.HasOne(x => x.reactedToMessage)
+                .WithMany()
+                .HasForeignKey(x => x.reactedToMessageId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

@@ -37,13 +37,21 @@ public class FriendController : BaseApiController
         {
             await Mediator.Send(command, ct);
         }
-        catch (FriendRequestAlreadyExistsException ex)
+        catch (FriendRequestAlreadyExistsException e)
         {
             return BadRequest("Friend request has already been made.");
         }
-        catch (AlreadyFriendsException ex)
+        catch (AlreadyFriendsException e)
         {
             return BadRequest("Cannot send friend request to an existing friend.");
+        }
+        catch (CannotFriendYourselfException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, "An error occurred while processing the request.");
         }
 
         return new OkResult();
