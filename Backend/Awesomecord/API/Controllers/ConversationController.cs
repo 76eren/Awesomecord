@@ -27,16 +27,8 @@ public class ConversationController : BaseApiController
 
         var command = new CreateConversationCommand(userId, contract.userIds, contract.title);
 
-        try
-        {
-            await Mediator.Send(command);
-            return Ok();
-        }
-        catch (Exception)
-        {
-            return ServerErrorProblem("Conversation creation failed",
-                "An error occurred while creating the conversation.");
-        }
+        await Mediator.Send(command);
+        return Ok();
     }
 
     [Authorize]
@@ -69,15 +61,8 @@ public class ConversationController : BaseApiController
         var fileName = image?.FileName;
 
         var command = new CreateMessageCommand(conversationId, userId, message, imageStream, contentType, fileName);
-        try
-        {
-            await Mediator.Send(command, ct);
-            return Ok();
-        }
-        catch (Exception)
-        {
-            return ServerErrorProblem("Message send failed", "An error occurred while sending the message.");
-        }
+        await Mediator.Send(command, ct);
+        return Ok();
     }
 
     [HttpGet("{conversationId}/messages/{batch}")]
@@ -95,16 +80,8 @@ public class ConversationController : BaseApiController
             Batch = batch
         };
 
-        try
-        {
-            var result = await Mediator.Send(query);
-            var toReturn = Mapper.Map<List<MessageGetContract>>(result);
-            return toReturn;
-        }
-        catch (Exception)
-        {
-            return ServerErrorProblem<List<MessageGetContract>>("Failed to get messages",
-                "An error occurred while fetching messages for the conversation.");
-        }
+        var result = await Mediator.Send(query);
+        var toReturn = Mapper.Map<List<MessageGetContract>>(result);
+        return Ok(toReturn);
     }
 }

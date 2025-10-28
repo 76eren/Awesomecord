@@ -2,7 +2,6 @@
 using API.Contracts.Login;
 using API.Contracts.User;
 using API.Services;
-using Application.Common.Exceptions;
 using Application.CQRS.Users.Commands;
 using Application.CQRS.Users.Queries;
 using Application.DTOs;
@@ -37,28 +36,21 @@ public class AuthController : BaseApiController
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestContract requestContract, CancellationToken ct)
     {
-        try
-        {
-            var userDto = await Mediator.Send(
-                new LoginRequest.LoginUserQuery(requestContract.HandleOrEmail, requestContract.Password), ct);
+        var userDto = await Mediator.Send(
+            new LoginRequest.LoginUserQuery(requestContract.HandleOrEmail, requestContract.Password), ct);
 
-            var user = await _db.Users.FindAsync(new object?[] { userDto.Id }, ct);
-            if (user is null)
-                return UnauthorizedProblem("Invalid credentials", "The handle/email or password is incorrect.");
-
-            var access = _tokenService.CreateAccessToken(user);
-            CookieWriter.SetAccessToken(Response, access, TimeSpan.FromMinutes(_jwtOptions.Value.AccessTokenMinutes));
-
-            var (opaque, row) = await _refreshTokenService.IssueAsync(user.Id, ct);
-            CookieWriter.SetRefreshToken(Response, opaque, row.ExpiresAtUtc);
-
-            var responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(userDto);
-            return Ok(responseContract);
-        }
-        catch (InvalidCredentialsException)
-        {
+        var user = await _db.Users.FindAsync(new object?[] { userDto.Id }, ct);
+        if (user is null)
             return UnauthorizedProblem("Invalid credentials", "The handle/email or password is incorrect.");
-        }
+
+        var access = _tokenService.CreateAccessToken(user);
+        CookieWriter.SetAccessToken(Response, access, TimeSpan.FromMinutes(_jwtOptions.Value.AccessTokenMinutes));
+
+        var (opaque, row) = await _refreshTokenService.IssueAsync(user.Id, ct);
+        CookieWriter.SetRefreshToken(Response, opaque, row.ExpiresAtUtc);
+
+        var responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(userDto);
+        return Ok(responseContract);
     }
 
     [Authorize]
@@ -122,17 +114,9 @@ public class AuthController : BaseApiController
             requestContract.PasswordHash
         );
 
-        try
-        {
-            var result = await Mediator.Send(command, ct);
-            var responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
-            return Ok(responseContract);
-        }
-        catch (HandleAlreadyTakenException _)
-        {
-            return ConflictProblem("Handle already taken",
-                "The user handle is already taken. Please choose a different one.");
-        }
+        var result = await Mediator.Send(command, ct);
+        var responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
+        return Ok(responseContract);
     }
 
     // When 401 due to expired access call via frontend to get a new one

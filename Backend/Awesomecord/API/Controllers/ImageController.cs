@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using Application.Common.Exceptions;
 using Application.CQRS.Images;
 using Application.CQRS.Images.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -28,19 +27,8 @@ public class ImageController : BaseApiController
 
         var command = new UploadProfilePictureCommand(file.FileName, file.ContentType, userId, stream);
 
-        try
-        {
-            var hash = await Mediator.Send(command, ct);
-            return Ok(new { hash });
-        }
-        catch (UserNotFoundException)
-        {
-            return NotFoundProblem("User not found", "Please login again.");
-        }
-        catch (Exception ex)
-        {
-            return ServerErrorProblem("Upload failed", ex.Message);
-        }
+        var hash = await Mediator.Send(command, ct);
+        return Ok(new { hash });
     }
 
     [HttpGet("profile")]

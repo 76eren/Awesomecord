@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
 using API.Contracts.Friend.Create;
-using Application.Common.Exceptions;
 using Application.CQRS.Friends.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,26 +23,7 @@ public class FriendController : BaseApiController
             userHandle,
             requestContract.ReceiverHandle);
 
-        try
-        {
-            await Mediator.Send(command, ct);
-        }
-        catch (FriendRequestAlreadyExistsException)
-        {
-            return BadRequestProblem("Friend request already exists", "Friend request has already been made.");
-        }
-        catch (AlreadyFriendsException)
-        {
-            return BadRequestProblem("Already friends", "Cannot send friend request to an existing friend.");
-        }
-        catch (CannotFriendYourselfException e)
-        {
-            return BadRequestProblem("Invalid friend request", e.Message);
-        }
-        catch (Exception)
-        {
-            return ServerErrorProblem("Friend request failed");
-        }
+        await Mediator.Send(command, ct);
 
         return Ok();
     }
@@ -61,22 +41,8 @@ public class FriendController : BaseApiController
 
         var command = new HandleFriendRequestCommand(requesterId, recipientId,
             cancelContract.Action.ToLower());
-        try
-        {
-            await Mediator.Send(command, ct);
-        }
-        catch (FriendRequestNotFoundException)
-        {
-            return NotFoundProblem("Friend request not found", "Friend request not found.");
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            return BadRequestProblem("Invalid action", "Action must be 'accept' or 'deny'.");
-        }
-        catch (Exception)
-        {
-            return ServerErrorProblem("Friend request handling failed");
-        }
+
+        await Mediator.Send(command, ct);
 
         return Ok();
     }
@@ -89,14 +55,7 @@ public class FriendController : BaseApiController
         if (string.IsNullOrEmpty(userId)) return UnauthorizedProblem();
 
         var command = new DeleteFriendCommand(userId, friendIdToDelete);
-        try
-        {
-            await Mediator.Send(command, ct);
-        }
-        catch (Exception)
-        {
-            return ServerErrorProblem("Delete friend failed", "An error occurred while deleting the friend.");
-        }
+        await Mediator.Send(command, ct);
 
         return Ok();
     }
