@@ -9,26 +9,17 @@ import {useUserStore} from "../../store/userStore.ts";
 import {useConversationStore} from "../../store/conversationStore.ts";
 import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
 import {useSignalRStore} from "../../store/signalrStore.ts";
-
 import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
 import {deleteMessage} from "../../services/messageService.ts";
 import MessageEditDialog from "./MessageEditDialog.tsx";
-import {useLocation} from "react-router-dom";
 
 type ChatWindowProps = {
     title?: string;
+    conversationId: string;
 };
 
-export default function ChatWindow({title}: ChatWindowProps) {
-    const location = useLocation();
-    const [conversationId, setConversationId] = useState<string>(() => location.pathname.replace(/^\/chats\/?/, ""));
-
-    useEffect(() => {
-        const id = location.pathname.replace(/^\/chats\/?/, "");
-        setConversationId(id);
-    }, [location.pathname]);
-
-    const noConversationSelected = conversationId === "";
+export default function ChatWindow({title, conversationId}: ChatWindowProps) {
+    const noConversationSelected = !conversationId;
 
     const currentUserId = useUserStore((s) => s.user?.id ?? "");
     const convUsers = useConversationStore((s) => s.users);
@@ -54,18 +45,21 @@ export default function ChatWindow({title}: ChatWindowProps) {
     const {speak, stop, ready} = useAnimaleseSpriteAuto({
         url: "/assets/animalCrossing/m1.ogg",
         letters: "abcdefghijklmnopqrstuvwxyz",
-
     });
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingMessage, setEditingMessage] = useState<MessageModel | null>(null);
 
-    const voiceSetting = localStorage.getItem("chatVoiceEnabled");
+    const voiceSetting = typeof window !== "undefined" ? localStorage.getItem("chatVoiceEnabled") : null;
     const [voiceEnabled, setVoiceEnabled] = useState(voiceSetting === "true");
 
+    useEffect(() => {
+        return () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        };
+    }, [previewUrl]);
 
     useEffect(() => {
-        // If no conversation is selected, don't subscribe to SignalR events.
         if (noConversationSelected) return;
 
         let canceled = false;
@@ -80,8 +74,6 @@ export default function ChatWindow({title}: ChatWindowProps) {
                     const msg: MessageModel = payload?.messageModel ?? payload;
                     if (!msg) return;
                     if (msg.conversationId !== conversationId) return;
-
-                    console.log("Valid because conversationId matches:", msg.conversationId, conversationId);
 
                     setMessages((prev) => {
                         if (prev.some(m => m.id === msg.id)) return prev;
@@ -110,10 +102,8 @@ export default function ChatWindow({title}: ChatWindowProps) {
                 const handler = async (payload: any) => {
                     const deletedMessageId: string = payload?.id ?? payload;
                     if (!deletedMessageId) return;
-
                     setMessages((prev) => prev.filter(m => m.id !== deletedMessageId));
-                }
-
+                };
                 const unsubDeleted = on("messageDeleted", "messageDeleted", handler);
                 if (unsubDeleted) unsubs.push(unsubDeleted);
             } catch (e) {
@@ -125,9 +115,8 @@ export default function ChatWindow({title}: ChatWindowProps) {
                 const handler = async (payload: any) => {
                     const editedMessage: MessageModel = payload?.messageModel ?? payload;
                     if (!editedMessage) return;
-
                     setMessages((prev) => prev.map(m => m.id === editedMessage.id ? editedMessage : m));
-                }
+                };
                 const unsubEdited = on("messageEdited", "messageEdited", handler);
                 if (unsubEdited) unsubs.push(unsubEdited);
             } catch (e) {
@@ -141,6 +130,7 @@ export default function ChatWindow({title}: ChatWindowProps) {
                 try {
                     u && u();
                 } catch {
+
                 }
             });
         };
@@ -169,6 +159,7 @@ export default function ChatWindow({title}: ChatWindowProps) {
         const toSend = inputValue.trim();
         await handleSendMessage(toSend, attachedImage ?? undefined);
 
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
         setInputValue("");
         setAttachedImage(null);
         setPreviewUrl(null);
@@ -183,6 +174,7 @@ export default function ChatWindow({title}: ChatWindowProps) {
             return;
         }
 
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
         setAttachedImage(file);
         setPreviewUrl(URL.createObjectURL(file));
     };
@@ -191,50 +183,49 @@ export default function ChatWindow({title}: ChatWindowProps) {
         [...list].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
 
     const loadBatch = useCallback(async (b: number, {prepend}: { prepend: boolean }) => {
-        // Skip loading if no conversation is selected
-        if (!conversationId) return;
+        const convAtCall = conversationId;
+        if (!convAtCall) return;
 
         setIsLoading(true);
         setError(null);
         try {
-            const dataRaw = await getConversationMessages(conversationId, b);
+            const dataRaw = await getConversationMessages(convAtCall, b);
+            if (convAtCall !== conversationId) return;
+
             const data = sortAsc(dataRaw ?? []);
-            if (!data || data.length === 0) {
+            if (!data.length) {
                 setHasMore(false);
                 return;
             }
 
             if (prepend) {
                 const container = containerRef.current;
-                const prevHeight = container ? container.scrollHeight : 0;
+                const prevHeight = container?.scrollHeight ?? 0;
                 setMessages((prev) => {
                     const existing = new Set(prev.map(m => m.id));
                     const incoming = data.filter(m => !existing.has(m.id));
                     return [...incoming, ...prev];
                 });
                 requestAnimationFrame(() => {
-                    if (container) {
-                        const newHeight = container.scrollHeight;
-                        container.scrollTop = newHeight - prevHeight;
-                    }
+                    if (container) container.scrollTop = container.scrollHeight - prevHeight;
                 });
             } else {
                 setMessages(data);
                 requestAnimationFrame(() => {
                     const el = containerRef.current;
-                    if (el) {
-                        el.scrollTop = el.scrollHeight;
-                    }
+                    if (el) el.scrollTop = el.scrollHeight;
                 });
             }
             setBatch(b);
         } catch (e: any) {
+            if (convAtCall !== conversationId) return;
             setError(e?.message ?? "Failed to load messages");
         } finally {
-            setIsLoading(false);
+            if (convAtCall === conversationId) setIsLoading(false);
         }
     }, [conversationId]);
 
+    // Reset when conversation changes
     useEffect(() => {
         setMessages([]);
         setBatch(0);
@@ -244,8 +235,9 @@ export default function ChatWindow({title}: ChatWindowProps) {
         stop();
     }, [conversationId, stop]);
 
+    // Initial load
     useEffect(() => {
-        if (noConversationSelected) return; // Do nothing when there's no conversation
+        if (noConversationSelected) return;
         if (!initialLoadedRef.current && hasMore && !isLoading) {
             initialLoadedRef.current = true;
             loadBatch(0, {prepend: false});
@@ -269,13 +261,14 @@ export default function ChatWindow({title}: ChatWindowProps) {
     function switchVoice(enabled: Boolean) {
         const next: boolean = typeof enabled === "boolean" ? enabled : !voiceEnabled;
         setVoiceEnabled(next);
-        localStorage.setItem("chatVoiceEnabled", next.toString());
+        if (typeof window !== "undefined") {
+            localStorage.setItem("chatVoiceEnabled", next.toString());
+        }
     }
 
     async function handleDeleteMessage(id: string) {
         await deleteMessage(id);
     }
-
 
     const rendered = useMemo(() => messages.map((m) => {
         const mine = m.senderId === currentUserId;
@@ -328,11 +321,7 @@ export default function ChatWindow({title}: ChatWindowProps) {
                                     d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
                             </svg>
                         </button>
-
-
                     </div>
-
-
                 )}
 
                 {!mine && (
@@ -382,7 +371,6 @@ export default function ChatWindow({title}: ChatWindowProps) {
         );
     }), [messages, currentUserId, userById]);
 
-    // If there's no active conversation render a placeholder and do nothing else
     if (noConversationSelected) {
         return (
             <div className="flex h-full w-full items-center justify-center text-gray-400 select-none">
@@ -451,6 +439,7 @@ export default function ChatWindow({title}: ChatWindowProps) {
                                 <button
                                     type="button"
                                     onClick={() => {
+                                        if (previewUrl) URL.revokeObjectURL(previewUrl);
                                         setAttachedImage(null);
                                         setPreviewUrl(null);
                                     }}
@@ -519,11 +508,10 @@ export default function ChatWindow({title}: ChatWindowProps) {
                         setEditingMessage(null);
                     }}
                     onSaved={() => {
-                        // I could make the edit optimistic here, but SignalR will update it anyway
+                        // SignalR will update the edited message
                     }}
                 />
             )}
-
         </div>
     );
 }
