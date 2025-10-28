@@ -1,81 +1,108 @@
 import {API_BASE_URL} from "../schema/constants.ts";
 import {toast} from "react-toastify";
 
-// Extend options to allow suppressing global error toasts or overriding the message
 export type Options = RequestInit & {
     json?: unknown;
     suppressErrorToast?: boolean;
     customErrorMessage?: string;
 };
 
-function extractErrorMessage(status: number, contentType: string | null, bodyText: string | null): string {
-    if (contentType && contentType.includes("application/json") && bodyText) {
-        try {
-            const obj = JSON.parse(bodyText);
-            const msg = obj?.message || obj?.error || obj?.title || obj?.detail;
-            if (typeof msg === "string" && msg.trim().length > 0) return msg;
-            if (obj?.errors && typeof obj.errors === "object") {
-                const first = Object.values(obj.errors).flat().find(x => typeof x === "string") as string | undefined;
-                if (first) return first;
-            }
-        } catch {
-        }
+class ApiError extends Error {
+    status: number;
+    raw?: string;
+
+    constructor(message: string, status: number, raw?: string) {
+        super(message);
+        this.name = "ApiError";
+        this.status = status;
+        this.raw = raw;
     }
+}
 
-    if (bodyText && bodyText.trim().length > 0) return bodyText.trim();
+function isEmptyBody(status: number, headers: Headers): boolean {
+    if (status === 204 || status === 205) return true;
+    const len = headers.get("content-length");
+    return len === "0";
+}
 
-    if (status === 0) return "Network error. Please check your connection.";
-    if (status === 400) return "Bad request.";
-    if (status === 401) return "Unauthorized. Please sign in.";
-    if (status === 403) return "You don't have permission to do this.";
-    if (status === 404) return "Not found.";
-    if (status >= 500) return "An unexpected server error occurred. Please try again later.";
-    return `HTTP ${status}`;
+function parseProblemJson(raw: string, status: number): string | null {
+    // { title, status, detail }
+    try {
+        const obj = JSON.parse(raw);
+        const hasShape =
+            typeof obj?.title === "string" &&
+            typeof obj?.status === "number" &&
+            typeof obj?.detail === "string";
+
+        if (hasShape) {
+            const title = obj.title.trim() || `HTTP ${status}`;
+            const detail = obj.detail.trim();
+            return detail ? `${title}: ${detail}` : title;
+        }
+    } catch {
+        // Not JSON; ignore
+    }
+    return null;
+}
+
+function pickMethod(methodFromOptions: RequestInit["method"], hasJson: boolean): string {
+    if (methodFromOptions) return methodFromOptions;
+    return hasJson ? "POST" : "GET";
 }
 
 export async function apiFetch<T>(path: string, options: Options = {}): Promise<T> {
     const {json, headers, suppressErrorToast, customErrorMessage, ...rest} = options;
 
+    const mergedHeaders = new Headers(headers ?? {});
+    const hasJson = json !== undefined;
+
+    if (hasJson && !mergedHeaders.has("Content-Type")) {
+        mergedHeaders.set("Content-Type", "application/json");
+    }
+
     try {
         const res = await fetch(`${API_BASE_URL}${path}`, {
             credentials: "include",
-            headers: {
-                ...(json !== undefined ? {"Content-Type": "application/json"} : {}),
-                ...headers,
-            },
-            ...(json !== undefined ? {body: JSON.stringify(json), method: options.method ?? "POST"} : {}),
+            method: pickMethod(options.method, hasJson),
+            headers: mergedHeaders,
+            body: hasJson ? JSON.stringify(json) : undefined,
             ...rest,
         });
 
+        const shouldReadBody = !isEmptyBody(res.status, res.headers);
+        const rawText = shouldReadBody ? await res.text().catch(() => "") : "";
+
         if (!res.ok) {
-            const contentType = res.headers.get("content-type");
-            const text = await res.text().catch(() => "");
-            const message = customErrorMessage || extractErrorMessage(res.status, contentType, text);
+            const message =
+                customErrorMessage ||
+                parseProblemJson(rawText, res.status) ||
+                (res.status === 0
+                    ? "Network error. Please check your connection."
+                    : rawText?.trim()
+                        ? rawText.trim()
+                        : `HTTP ${res.status}`);
+
             if (!suppressErrorToast) toast.error(message);
-            throw new Error(message);
+            throw new ApiError(message, res.status, rawText);
         }
 
-        if (res.status === 204 || res.status === 205) {
-            return undefined as T;
-        }
-
-        const contentLength = res.headers.get("content-length");
-        if (contentLength === "0") {
+        if (!shouldReadBody || rawText.trim().length === 0) {
             return undefined as T;
         }
 
         const contentType = res.headers.get("content-type") ?? "";
+
         if (contentType.includes("application/json")) {
-            const text = await res.text();
-            if (!text) return undefined as T;
-            return JSON.parse(text) as T;
+            return JSON.parse(rawText) as T;
         }
 
-        const fallbackText = await res.text().catch(() => "");
-        return (fallbackText ? (fallbackText as unknown as T) : (undefined as T));
-    } catch (err: any) {
-        const message = customErrorMessage || (err?.message?.toString?.() || "Network error. Please try again.");
+        // Fallback: return raw text when not JSON.
+        return (rawText as unknown) as T;
+    } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        const message = customErrorMessage || err.message || "Network error. Please try again.";
+
         if (!suppressErrorToast) toast.error(message);
-        throw err instanceof Error ? err : new Error(message);
+        throw e instanceof Error ? e : new Error(message);
     }
 }
