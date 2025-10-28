@@ -15,7 +15,7 @@ public class MessageController : BaseApiController
     public async Task<IActionResult> DeleteMessageById(string messageId, CancellationToken ct)
     {
         var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(requesterId)) return Unauthorized();
+        if (string.IsNullOrEmpty(requesterId)) return UnauthorizedProblem();
 
         var command = new DeleteMessageCommand(messageId, requesterId);
         await Mediator.Send(command, ct);
@@ -24,14 +24,14 @@ public class MessageController : BaseApiController
 
     [Authorize]
     [HttpPatch("{messageId}")]
-    public async Task<IActionResult> EditMessageById(string messageId, [FromBody] MessageUpdateContract newBody, CancellationToken ct)
+    public async Task<IActionResult> EditMessageById(string messageId, [FromBody] MessageUpdateContract newBody,
+        CancellationToken ct)
     {
         var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(requesterId)) return Unauthorized();
-        
+        if (string.IsNullOrEmpty(requesterId)) return UnauthorizedProblem();
+
         var command = new EditMessageCommand(messageId, requesterId, newBody.NewMessage);
         await Mediator.Send(command, ct);
         return Ok();
-        
     }
 }

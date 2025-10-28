@@ -4,7 +4,6 @@ using Application.Common.Exceptions;
 using Application.CQRS.Friends.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Persistence;
 
 namespace API.Controllers;
 
@@ -12,14 +11,6 @@ namespace API.Controllers;
 [ApiController]
 public class FriendController : BaseApiController
 {
-    private readonly AppDbContext _db;
-
-    public FriendController(AppDbContext db)
-    {
-        _db = db;
-    }
-
-
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateFriendRequest([FromBody] FriendRequestContract requestContract,
@@ -27,7 +18,7 @@ public class FriendController : BaseApiController
     {
         var userHandle = User.FindFirstValue(ClaimTypes.Name);
 
-        if (string.IsNullOrEmpty(userHandle)) return Unauthorized();
+        if (string.IsNullOrEmpty(userHandle)) return UnauthorizedProblem();
 
         var command = new CreateFriendRequestCommand(
             userHandle,
@@ -37,24 +28,24 @@ public class FriendController : BaseApiController
         {
             await Mediator.Send(command, ct);
         }
-        catch (FriendRequestAlreadyExistsException e)
+        catch (FriendRequestAlreadyExistsException)
         {
-            return BadRequest("Friend request has already been made.");
+            return BadRequestProblem("Friend request already exists", "Friend request has already been made.");
         }
-        catch (AlreadyFriendsException e)
+        catch (AlreadyFriendsException)
         {
-            return BadRequest("Cannot send friend request to an existing friend.");
+            return BadRequestProblem("Already friends", "Cannot send friend request to an existing friend.");
         }
         catch (CannotFriendYourselfException e)
         {
-            return BadRequest(e.Message);
+            return BadRequestProblem("Invalid friend request", e.Message);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            return StatusCode(500, "An error occurred while processing the request.");
+            return ServerErrorProblem("Friend request failed");
         }
 
-        return new OkResult();
+        return Ok();
     }
 
     [Authorize]
@@ -66,7 +57,7 @@ public class FriendController : BaseApiController
     )
     {
         var requesterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(requesterId)) return Unauthorized();
+        if (string.IsNullOrEmpty(requesterId)) return UnauthorizedProblem();
 
         var command = new HandleFriendRequestCommand(requesterId, recipientId,
             cancelContract.Action.ToLower());
@@ -74,20 +65,20 @@ public class FriendController : BaseApiController
         {
             await Mediator.Send(command, ct);
         }
-        catch (FriendRequestNotFoundException _)
+        catch (FriendRequestNotFoundException)
         {
-            return NotFound("Friend request not found.");
+            return NotFoundProblem("Friend request not found", "Friend request not found.");
         }
-        catch (ArgumentOutOfRangeException _)
+        catch (ArgumentOutOfRangeException)
         {
-            return BadRequest("Action must be 'accept' or 'deny'.");
+            return BadRequestProblem("Invalid action", "Action must be 'accept' or 'deny'.");
         }
-        catch (Exception _)
+        catch (Exception)
         {
-            return StatusCode(500, "An error occurred while processing the request.");
+            return ServerErrorProblem("Friend request handling failed");
         }
 
-        return new OkResult();
+        return Ok();
     }
 
     [Authorize]
@@ -95,7 +86,7 @@ public class FriendController : BaseApiController
     public async Task<IActionResult> DeleteFriend(string friendIdToDelete, CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId)) return UnauthorizedProblem();
 
         var command = new DeleteFriendCommand(userId, friendIdToDelete);
         try
@@ -104,9 +95,9 @@ public class FriendController : BaseApiController
         }
         catch (Exception)
         {
-            // ignored
+            return ServerErrorProblem("Delete friend failed", "An error occurred while deleting the friend.");
         }
 
-        return new OkResult();
+        return Ok();
     }
 }

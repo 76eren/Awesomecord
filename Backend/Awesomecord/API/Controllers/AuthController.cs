@@ -18,11 +18,11 @@ namespace API.Controllers;
 [ApiController]
 public class AuthController : BaseApiController
 {
-    private readonly ITokenService _tokenService;
-    private readonly IRefreshTokenService _refreshTokenService;
-    private readonly IOptions<JwtOptions> _jwtOptions;
     private readonly AppDbContext _db;
-    
+    private readonly IOptions<JwtOptions> _jwtOptions;
+    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly ITokenService _tokenService;
+
     public AuthController(ITokenService tokenService,
         IRefreshTokenService refreshTokenService,
         IOptions<JwtOptions> jwtOptions,
@@ -35,7 +35,7 @@ public class AuthController : BaseApiController
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<GetUserResponseNoSensitiveDataResponse>> Login([FromBody] LoginRequestContract requestContract, CancellationToken ct)
+    public async Task<IActionResult> Login([FromBody] LoginRequestContract requestContract, CancellationToken ct)
     {
         try
         {
@@ -43,7 +43,8 @@ public class AuthController : BaseApiController
                 new LoginRequest.LoginUserQuery(requestContract.HandleOrEmail, requestContract.Password), ct);
 
             var user = await _db.Users.FindAsync(new object?[] { userDto.Id }, ct);
-            if (user is null) return Unauthorized();
+            if (user is null)
+                return UnauthorizedProblem("Invalid credentials", "The handle/email or password is incorrect.");
 
             var access = _tokenService.CreateAccessToken(user);
             CookieWriter.SetAccessToken(Response, access, TimeSpan.FromMinutes(_jwtOptions.Value.AccessTokenMinutes));
@@ -56,28 +57,23 @@ public class AuthController : BaseApiController
         }
         catch (InvalidCredentialsException)
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Invalid credentials",
-                Detail = "The handle/email or password is incorrect.",
-                Status = StatusCodes.Status401Unauthorized
-            });
+            return UnauthorizedProblem("Invalid credentials", "The handle/email or password is incorrect.");
         }
     }
-    
+
     [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
         if (Request.Cookies.TryGetValue("refresh_token", out var opaque) && !string.IsNullOrEmpty(opaque))
-        {
             try
             {
                 var (_, current) = await _refreshTokenService.ValidateAsync(opaque, ct);
                 await _refreshTokenService.RevokeAsync(current, ct);
             }
-            catch (InvalidRefreshTokenException) {  }
-        }
+            catch (InvalidRefreshTokenException)
+            {
+            }
 
         CookieWriter.Clear(Response);
         return NoContent();
@@ -85,77 +81,66 @@ public class AuthController : BaseApiController
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<ActionResult<GetAllDataUserResponseContract>> Me(CancellationToken ct)
+    public async Task<IActionResult> Me(CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
-        
+        if (string.IsNullOrEmpty(userId)) return UnauthorizedProblem();
+
         var user = await _db.Users
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
-        
-        if (user is null)
-        {
-            return Unauthorized();
-        }
-        
+
+        if (user is null) return UnauthorizedProblem();
+
         var dto = Mapper.Map<UserDto>(user);
         var contract = Mapper.Map<GetAllDataUserResponseContract>(dto);
-        
+
         return Ok(contract);
     }
-    
+
     [HttpGet("authenticated")]
-    public async Task<IActionResult> IsAuthenticated()
+    public IActionResult IsAuthenticated()
     {
         if (User.Identity is not { IsAuthenticated: true })
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Not authenticated",
-                Detail = "The user is not authenticated.",
-                Status = StatusCodes.Status401Unauthorized
-            });
+            return UnauthorizedProblem();
 
         return NoContent();
     }
-    
-    
+
+
     [HttpPost]
-    public async Task<ActionResult<GetUserResponseNoSensitiveDataResponse>> Register([FromBody] CreateUserRequestContract requestContract, CancellationToken ct)
+    public async Task<IActionResult> Register([FromBody] CreateUserRequestContract requestContract,
+        CancellationToken ct)
     {
         var command = new CreateUserCommand(
-            requestContract.DisplayName, 
-            requestContract.UserHandle, 
+            requestContract.DisplayName,
+            requestContract.UserHandle,
             requestContract.Bio,
-            requestContract.FirstName, 
-            requestContract.LastName, 
-            requestContract.Email, 
-            requestContract.Phone, 
+            requestContract.FirstName,
+            requestContract.LastName,
+            requestContract.Email,
+            requestContract.Phone,
             requestContract.PasswordHash
-            );
+        );
 
         try
         {
-            UserDto result = await Mediator.Send(command, ct);
-            GetUserResponseNoSensitiveDataResponse responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
+            var result = await Mediator.Send(command, ct);
+            var responseContract = Mapper.Map<GetUserResponseNoSensitiveDataResponse>(result);
             return Ok(responseContract);
         }
         catch (HandleAlreadyTakenException _)
         {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Handle already taken",
-                Detail = "The user handle is already taken. Please choose a different one.",
-                Status = StatusCodes.Status409Conflict
-            });
-        } 
+            return ConflictProblem("Handle already taken",
+                "The user handle is already taken. Please choose a different one.");
+        }
     }
-    
+
     // When 401 due to expired access call via frontend to get a new one
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(CancellationToken ct)
     {
         if (!Request.Cookies.TryGetValue("refresh_token", out var opaque) || string.IsNullOrEmpty(opaque))
-            return Unauthorized();
+            return UnauthorizedProblem("Missing refresh token", "Refresh token cookie is missing.");
 
         try
         {
@@ -172,12 +157,7 @@ public class AuthController : BaseApiController
         catch (InvalidRefreshTokenException)
         {
             CookieWriter.Clear(Response);
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Invalid refresh token",
-                Detail = "Please login again.",
-                Status = StatusCodes.Status401Unauthorized
-            });
+            return UnauthorizedProblem("Invalid refresh token", "Please login again.");
         }
     }
 }

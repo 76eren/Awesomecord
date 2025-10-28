@@ -19,10 +19,11 @@ public class ConversationController : BaseApiController
     public async Task<IActionResult> CreateConversation([FromBody] CreateConversationContract contract)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId)) return UnauthorizedProblem();
 
         if (contract?.userIds == null || contract.userIds.Count == 0)
-            return BadRequest("Provide the full list of participants as user IDs.");
+            return BadRequestProblem("Invalid conversation request",
+                "Provide the full list of participants as user IDs.");
 
         var command = new CreateConversationCommand(userId, contract.userIds, contract.title);
 
@@ -31,9 +32,10 @@ public class ConversationController : BaseApiController
             await Mediator.Send(command);
             return Ok();
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            return BadRequest(e.Message);
+            return ServerErrorProblem("Conversation creation failed",
+                "An error occurred while creating the conversation.");
         }
     }
 
@@ -42,24 +44,24 @@ public class ConversationController : BaseApiController
     public async Task<ActionResult<List<GetConversationContract>>> GetConversations(CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId)) return UnauthorizedProblem<List<GetConversationContract>>();
 
         var result = await Mediator.Send(new GetConversations.Query { User = userId }, ct);
         var toReturn = Mapper.Map<List<GetConversationContract>>(result);
-        return toReturn;
+        return Ok(toReturn);
     }
 
     [Authorize]
     [HttpPost("{conversationId}/chat")]
     [RequestSizeLimit(50_000_000)]
-    public async Task<ActionResult> SendMessage(string conversationId, [FromForm] string? message,
+    public async Task<IActionResult> SendMessage(string conversationId, [FromForm] string? message,
         [FromForm] IFormFile? image, CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId)) return UnauthorizedProblem();
 
         if (string.IsNullOrWhiteSpace(message) && image == null)
-            return BadRequest("At least a message, image or both is required.");
+            return BadRequestProblem("Invalid message", "At least a message, image or both is required.");
 
 
         var imageStream = image?.OpenReadStream();
@@ -72,9 +74,9 @@ public class ConversationController : BaseApiController
             await Mediator.Send(command, ct);
             return Ok();
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            return BadRequest(e.Message);
+            return ServerErrorProblem("Message send failed", "An error occurred while sending the message.");
         }
     }
 
@@ -84,7 +86,7 @@ public class ConversationController : BaseApiController
         int batch)
     {
         var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(user)) return Unauthorized();
+        if (string.IsNullOrEmpty(user)) return UnauthorizedProblem<List<MessageGetContract>>();
 
         var query = new GetMessagesByConversation.Query
         {
@@ -99,9 +101,10 @@ public class ConversationController : BaseApiController
             var toReturn = Mapper.Map<List<MessageGetContract>>(result);
             return toReturn;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            return BadRequest(e.Message);
+            return ServerErrorProblem<List<MessageGetContract>>("Failed to get messages",
+                "An error occurred while fetching messages for the conversation.");
         }
     }
 }
