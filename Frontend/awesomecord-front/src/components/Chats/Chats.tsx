@@ -96,7 +96,7 @@ export default function Chats() {
                 <main className="flex-1 p-6">
                     {currentConversation && (
                         <div className="h-[calc(100vh-3rem)]">
-                            <ChatWindow conversationId={currentConversation.id} title={title}/>
+                            <ChatWindow title={title}/>
                         </div>
                     )}
                 </main>

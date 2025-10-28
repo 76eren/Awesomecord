@@ -13,13 +13,23 @@ import {useSignalRStore} from "../../store/signalrStore.ts";
 import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
 import {deleteMessage} from "../../services/messageService.ts";
 import MessageEditDialog from "./MessageEditDialog.tsx";
+import {useLocation} from "react-router-dom";
 
 type ChatWindowProps = {
-    conversationId: string;
     title?: string;
 };
 
-export default function ChatWindow({conversationId, title}: ChatWindowProps) {
+export default function ChatWindow({title}: ChatWindowProps) {
+    const location = useLocation();
+    const [conversationId, setConversationId] = useState<string>(() => location.pathname.replace(/^\/chats\/?/, ""));
+
+    useEffect(() => {
+        const id = location.pathname.replace(/^\/chats\/?/, "");
+        setConversationId(id);
+    }, [location.pathname]);
+
+    const noConversationSelected = conversationId === "";
+
     const currentUserId = useUserStore((s) => s.user?.id ?? "");
     const convUsers = useConversationStore((s) => s.users);
     const conversation = useConversationStore((s) => s.conversations.find(c => c.id === conversationId));
@@ -53,9 +63,13 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     const voiceSetting = localStorage.getItem("chatVoiceEnabled");
     const [voiceEnabled, setVoiceEnabled] = useState(voiceSetting === "true");
 
+
     useEffect(() => {
+        // If no conversation is selected, don't subscribe to SignalR events.
+        if (noConversationSelected) return;
+
         let canceled = false;
-        let unsub: (() => void) | undefined;
+        const unsubs: Array<() => void> = [];
 
         (async () => {
             try {
@@ -66,6 +80,8 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                     const msg: MessageModel = payload?.messageModel ?? payload;
                     if (!msg) return;
                     if (msg.conversationId !== conversationId) return;
+
+                    console.log("Valid because conversationId matches:", msg.conversationId, conversationId);
 
                     setMessages((prev) => {
                         if (prev.some(m => m.id === msg.id)) return prev;
@@ -83,7 +99,8 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                     }
                 };
 
-                unsub = on("messages", "messages", handler);
+                const unsubMessages = on("messages", "messages", handler);
+                if (unsubMessages) unsubs.push(unsubMessages);
             } catch (e) {
                 console.error("[SignalR] start failed", e);
             }
@@ -97,7 +114,8 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                     setMessages((prev) => prev.filter(m => m.id !== deletedMessageId));
                 }
 
-                unsub = on("messageDeleted", "messageDeleted", handler);
+                const unsubDeleted = on("messageDeleted", "messageDeleted", handler);
+                if (unsubDeleted) unsubs.push(unsubDeleted);
             } catch (e) {
                 console.error("[SignalR] start failed", e);
             }
@@ -110,7 +128,8 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
 
                     setMessages((prev) => prev.map(m => m.id === editedMessage.id ? editedMessage : m));
                 }
-                unsub = on("messageEdited", "messageEdited", handler);
+                const unsubEdited = on("messageEdited", "messageEdited", handler);
+                if (unsubEdited) unsubs.push(unsubEdited);
             } catch (e) {
                 console.error("[SignalR] start failed", e);
             }
@@ -118,11 +137,17 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
 
         return () => {
             canceled = true;
-            if (unsub) unsub();
+            unsubs.forEach(u => {
+                try {
+                    u && u();
+                } catch {
+                }
+            });
         };
-    }, [ensure, on, conversationId, currentUserId, speak, voiceEnabled, ready]);
+    }, [ensure, on, conversationId, currentUserId, speak, voiceEnabled, ready, noConversationSelected]);
 
     const handleSendMessage = useCallback(async (body: string, image?: File) => {
+        if (!conversationId) return;
         try {
             await SendMessageInConversation(conversationId, body, image);
         } catch (err) {
@@ -166,6 +191,9 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
         [...list].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
 
     const loadBatch = useCallback(async (b: number, {prepend}: { prepend: boolean }) => {
+        // Skip loading if no conversation is selected
+        if (!conversationId) return;
+
         setIsLoading(true);
         setError(null);
         try {
@@ -217,11 +245,12 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
     }, [conversationId, stop]);
 
     useEffect(() => {
+        if (noConversationSelected) return; // Do nothing when there's no conversation
         if (!initialLoadedRef.current && hasMore && !isLoading) {
             initialLoadedRef.current = true;
             loadBatch(0, {prepend: false});
         }
-    }, [hasMore, isLoading, loadBatch]);
+    }, [hasMore, isLoading, loadBatch, noConversationSelected]);
 
     const onScroll = useCallback(() => {
         const el = containerRef.current;
@@ -254,7 +283,6 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
         const displayName = user?.displayName ?? `User ${m.senderId.slice(0, 6)}`;
         const avatarUrl = getProfilePictureUrlByUserId(m.senderId);
         const time = new Date(m.sentAt);
-        const timeStr = time.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
 
         return (
             <div
@@ -353,6 +381,15 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
             </div>
         );
     }), [messages, currentUserId, userById]);
+
+    // If there's no active conversation render a placeholder and do nothing else
+    if (noConversationSelected) {
+        return (
+            <div className="flex h-full w-full items-center justify-center text-gray-400 select-none">
+                Select a conversation to start chatting
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-full w-full">
@@ -481,7 +518,7 @@ export default function ChatWindow({conversationId, title}: ChatWindowProps) {
                         setDialogOpen(false);
                         setEditingMessage(null);
                     }}
-                    onSaved={(newText) => {
+                    onSaved={() => {
                         // I could make the edit optimistic here, but SignalR will update it anyway
                     }}
                 />
