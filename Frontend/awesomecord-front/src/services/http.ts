@@ -73,16 +73,16 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
         const rawText = shouldReadBody ? await res.text().catch(() => "") : "";
 
         if (!res.ok) {
-            const message =
-                customErrorMessage ||
-                parseProblemJson(rawText, res.status) ||
+            const message = customErrorMessage || parseProblemJson(rawText, res.status) ||
                 (res.status === 0
                     ? "Network error. Please check your connection."
                     : rawText?.trim()
                         ? rawText.trim()
                         : `HTTP ${res.status}`);
 
-            if (!suppressErrorToast) toast.error(message);
+            if (!suppressErrorToast) {
+                toast.error(message);
+            }
             throw new ApiError(message, res.status, rawText);
         }
 
@@ -96,13 +96,18 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
             return JSON.parse(rawText) as T;
         }
 
-        // Fallback: return raw text when not JSON.
         return (rawText as unknown) as T;
     } catch (e: unknown) {
+
+        // Avoid double-toasting
+        if (e instanceof ApiError) {
+            throw e;
+        }
+
         const err = e instanceof Error ? e : new Error(String(e));
         const message = customErrorMessage || err.message || "Network error. Please try again.";
 
         if (!suppressErrorToast) toast.error(message);
-        throw e instanceof Error ? e : new Error(message);
+        throw err;
     }
 }
