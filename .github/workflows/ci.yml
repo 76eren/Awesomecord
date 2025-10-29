@@ -105,6 +105,9 @@ jobs:
             ${SSH_USERNAME}@${SERVER_IP}:"${DEPLOYMENT_SERVER_DIRECTORY}/docker-compose.deploy.yml"
 
       - name: Write env files on server
+        env:
+          TAG: ${{ env.TAG }}
+          GH_OWNER: ${{ github.repository_owner }}
         run: |
           ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} <<EOF
           set -eo pipefail
@@ -113,6 +116,13 @@ jobs:
           cat > "\$DEPLOYMENT_SERVER_DIRECTORY/.env" << 'EOROOT'
           ${ENV_DOCKER_COMPOSE}
           EOROOT
+
+          TAG_VALUE="${TAG}"
+          GH_OWNER_LC="\$(printf '%s' "${GH_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          {
+            printf 'TAG=%s\n' "\$TAG_VALUE"
+            printf 'GH_OWNER=%s\n' "\$GH_OWNER_LC"
+          } >> "\$DEPLOYMENT_SERVER_DIRECTORY/.env"
 
           cat > "\$DEPLOYMENT_SERVER_DIRECTORY/Frontend/awesomecord-front/.env" << 'EOFE'
           ${ENV_FRONTEND}
@@ -124,15 +134,10 @@ jobs:
           EOF
 
       - name: Pull and run containers on server
-        env:
-          GH_OWNER: ${{ github.repository_owner }}
         run: |
           ssh -i ~/.ssh/id_ed25519 ${SSH_USERNAME}@${SERVER_IP} <<EOF
           set -eo pipefail
           cd "${DEPLOYMENT_SERVER_DIRECTORY}"
-          export TAG="${TAG}"
-          export GH_OWNER="${GH_OWNER,,}"
-
           docker compose -f docker-compose.deploy.yml pull
           docker compose -f docker-compose.deploy.yml up -d
           EOF
