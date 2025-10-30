@@ -12,11 +12,20 @@ import {useSignalRStore} from "../../store/signalrStore.ts";
 import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
 import {deleteMessage} from "../../services/messageService.ts";
 import MessageEditDialog from "./MessageEditDialog.tsx";
+import {toast} from "react-toastify";
 
 type ChatWindowProps = {
     title?: string;
     conversationId: string;
 };
+
+const MAX_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set<string>([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+]);
 
 export default function ChatWindow({title, conversationId}: ChatWindowProps) {
     const noConversationSelected = !conversationId;
@@ -156,6 +165,17 @@ export default function ChatWindow({title, conversationId}: ChatWindowProps) {
     const handleSubmit = async () => {
         if (!inputValue.trim() && !attachedImage) return;
 
+        if (attachedImage) {
+            if (!ALLOWED_IMAGE_TYPES.has(attachedImage.type)) {
+                toast.error("Only JPEG, PNG, WEBP, or GIF images are allowed.");
+                return;
+            }
+            if (attachedImage.size > MAX_IMAGE_SIZE_BYTES) {
+                toast.error("Image is larger than 50 MB.");
+                return;
+            }
+        }
+
         const toSend = inputValue.trim();
         await handleSendMessage(toSend, attachedImage ?? undefined);
 
@@ -169,8 +189,15 @@ export default function ChatWindow({title, conversationId}: ChatWindowProps) {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.type.startsWith("image/")) {
-            alert("Only image files are allowed.");
+        if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+            toast.error("Only JPEG, PNG, WEBP, or GIF images are allowed.");
+            e.target.value = "";
+            return;
+        }
+
+        if (file.size > MAX_IMAGE_SIZE_BYTES) {
+            toast.error("Image is larger than 50 MB.");
+            e.target.value = "";
             return;
         }
 
@@ -459,7 +486,7 @@ export default function ChatWindow({title, conversationId}: ChatWindowProps) {
                                 <input
                                     id="chat-image-upload"
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
                                     onChange={handleImageChange}
                                     className="hidden"
                                 />
