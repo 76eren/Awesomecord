@@ -1,5 +1,5 @@
 import {NavLink} from "react-router-dom";
-import {Bell, ContactRound, LogOut, MessageSquare, Server as ServerIcon, UserIcon} from "lucide-react";
+import {Bell, ContactRound, LogOut, MessageSquare, UserIcon} from "lucide-react";
 import * as React from "react";
 import {logout} from "../../services/authService";
 import {useUserStore} from "../../store/userStore.ts";
@@ -14,7 +14,7 @@ type NavItem = {
 const navItems: NavItem[] = [
     {to: "/notifications", label: "Notifications", icon: <Bell className="h-5 w-5"/>},
     {to: "/chats", label: "Chats", icon: <MessageSquare className="h-5 w-5"/>},
-    {to: "/servers", label: "Servers", icon: <ServerIcon className="h-5 w-5"/>},
+    // {to: "/servers", label: "Servers", icon: <ServerIcon className="h-5 w-5"/>},
     {to: "/add-friend", label: "Friends", icon: <ContactRound className="h-5 w-5"/>},
     {to: "/profile", label: "Profile", icon: <UserIcon className="h-5 w-5"/>},
     {
