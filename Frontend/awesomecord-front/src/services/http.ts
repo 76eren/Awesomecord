@@ -5,7 +5,12 @@ export type Options = RequestInit & {
     json?: unknown;
     suppressErrorToast?: boolean;
     customErrorMessage?: string;
+
+    // flag to avoid race conditions and makes sure infinite loops don't happen (when not authenticated)
+    noAutoRefresh?: boolean;
 };
+
+let refreshPromise: Promise<boolean> | null = null;
 
 class ApiError extends Error {
     status: number;
@@ -19,39 +24,8 @@ class ApiError extends Error {
     }
 }
 
-function isEmptyBody(status: number, headers: Headers): boolean {
-    if (status === 204 || status === 205) return true;
-    const len = headers.get("content-length");
-    return len === "0";
-}
-
-function parseProblemJson(raw: string, status: number): string | null {
-    // { title, status, detail }
-    try {
-        const obj = JSON.parse(raw);
-        const hasShape =
-            typeof obj?.title === "string" &&
-            typeof obj?.status === "number" &&
-            typeof obj?.detail === "string";
-
-        if (hasShape) {
-            const title = obj.title.trim() || `HTTP ${status}`;
-            const detail = obj.detail.trim();
-            return detail ? `${title}: ${detail}` : title;
-        }
-    } catch {
-        // Not JSON; ignore
-    }
-    return null;
-}
-
-function pickMethod(methodFromOptions: RequestInit["method"], hasJson: boolean): string {
-    if (methodFromOptions) return methodFromOptions;
-    return hasJson ? "POST" : "GET";
-}
-
 export async function apiFetch<T>(path: string, options: Options = {}): Promise<T> {
-    const {json, headers, suppressErrorToast, customErrorMessage, ...rest} = options;
+    const {json, headers, suppressErrorToast, customErrorMessage, noAutoRefresh, ...rest} = options;
 
     const mergedHeaders = new Headers(headers ?? {});
     const hasJson = json !== undefined;
@@ -60,17 +34,30 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
         mergedHeaders.set("Content-Type", "application/json");
     }
 
-    try {
-        const res = await fetch(`${API_BASE_URL}${path}`, {
-            credentials: "include",
-            method: pickMethod(options.method, hasJson),
-            headers: mergedHeaders,
-            body: hasJson ? JSON.stringify(json) : undefined,
-            ...rest,
-        });
+    const requestInit: RequestInit = {
+        credentials: "include",
+        method: pickMethod(options.method, hasJson),
+        headers: mergedHeaders,
+        body: hasJson ? JSON.stringify(json) : undefined,
+        ...rest,
+    };
 
+    const exec = async () => {
+        const res = await fetch(`${API_BASE_URL}${path}`, requestInit);
         const shouldReadBody = !isEmptyBody(res.status, res.headers);
         const rawText = shouldReadBody ? await res.text().catch(() => "") : "";
+        return {res, rawText, shouldReadBody};
+    };
+
+    try {
+        let {res, rawText, shouldReadBody} = await exec();
+
+        if (res.status === 401 && !noAutoRefresh) {
+            const refreshed = await ensureSingleRefresh();
+            if (refreshed) {
+                ({res, rawText, shouldReadBody} = await exec());
+            }
+        }
 
         if (!res.ok) {
             const message = customErrorMessage || parseProblemJson(rawText, res.status) ||
@@ -111,3 +98,58 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
         throw err;
     }
 }
+
+function isEmptyBody(status: number, headers: Headers): boolean {
+    if (status === 204 || status === 205) return true;
+    const len = headers.get("content-length");
+    return len === "0";
+}
+
+function parseProblemJson(raw: string, status: number): string | null {
+    // { title, status, detail }
+    try {
+        const obj = JSON.parse(raw);
+        const hasShape =
+            typeof obj?.title === "string" &&
+            typeof obj?.status === "number" &&
+            typeof obj?.detail === "string";
+
+        if (hasShape) {
+            const title = obj.title.trim() || `HTTP ${status}`;
+            const detail = obj.detail.trim();
+            return detail ? `${title}: ${detail}` : title;
+        }
+    } catch {
+    }
+    return null;
+}
+
+function pickMethod(methodFromOptions: RequestInit["method"], hasJson: boolean): string {
+    if (methodFromOptions) return methodFromOptions;
+    return hasJson ? "POST" : "GET";
+}
+
+
+async function tryRefresh(): Promise<boolean> {
+    try {
+        const res = await fetch(`${API_BASE_URL}auth/refresh`, {
+            credentials: "include",
+            method: "POST",
+        });
+        return res.ok;
+    } catch {
+        return false;
+    }
+}
+
+function ensureSingleRefresh(): Promise<boolean> {
+    if (!refreshPromise) {
+        refreshPromise = tryRefresh().finally(() => {
+            setTimeout(() => {
+                refreshPromise = null;
+            }, 0);
+        });
+    }
+    return refreshPromise;
+}
+
