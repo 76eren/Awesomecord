@@ -5,11 +5,11 @@ import type {UserLoginModel} from "../Models/User/userLogin.model.ts";
 import type {LimitedUserModel} from "../Models/User/limitedUser.model.ts";
 
 export async function registerUser(userCreateModel: UserCreateModel) {
-    return apiFetch<LimitedUserModel>("auth", {json: userCreateModel, method: "POST"});
+    return apiFetch<LimitedUserModel>("auth", {json: userCreateModel, method: "POST", noAutoRefresh: true});
 }
 
 export async function loginUser(userLoginModel: UserLoginModel) {
-    return apiFetch<LimitedUserModel>("auth/login", {json: userLoginModel, method: "POST"});
+    return apiFetch<LimitedUserModel>("auth/login", {json: userLoginModel, method: "POST", noAutoRefresh: true});
 }
 
 export async function me() {
