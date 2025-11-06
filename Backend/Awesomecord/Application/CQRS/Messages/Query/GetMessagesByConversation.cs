@@ -29,7 +29,6 @@ public class GetMessagesByConversation
 
             var conversation = await context.Conversation
                 .Include(c => c.Participants)
-                .Include(c => c.Messages)
                 .FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
 
             if (conversation is null) throw new ConversationNotFoundException();

@@ -27,10 +27,13 @@ public sealed class CreateFriendHandle(AppDbContext db, IUserUpdatePublisher not
 
         var friendRequests = db.Set<FriendRequest>();
 
-        var forwardReq = await friendRequests
-            .SingleOrDefaultAsync(fr => fr.RequesterId == sender.Id && fr.RecipientId == receiver.Id, ct);
-        var reverseReq = await friendRequests
-            .SingleOrDefaultAsync(fr => fr.RequesterId == receiver.Id && fr.RecipientId == sender.Id, ct);
+        var existingRequests = await friendRequests
+            .Where(fr => (fr.RequesterId == sender.Id && fr.RecipientId == receiver.Id) ||
+                        (fr.RequesterId == receiver.Id && fr.RecipientId == sender.Id))
+            .ToListAsync(ct);
+
+        var forwardReq = existingRequests.FirstOrDefault(fr => fr.RequesterId == sender.Id && fr.RecipientId == receiver.Id);
+        var reverseReq = existingRequests.FirstOrDefault(fr => fr.RequesterId == receiver.Id && fr.RecipientId == sender.Id);
 
         if (forwardReq is not null && reverseReq is null)
             throw new FriendRequestAlreadyExistsException();
@@ -74,8 +77,13 @@ public sealed class CreateFriendHandle(AppDbContext db, IUserUpdatePublisher not
 
     private async Task EnsureFriendshipAsync(string aId, string bId, CancellationToken ct)
     {
-        var alreadyAB = await db.Set<Friendship>().AnyAsync(f => f.UserId == aId && f.FriendId == bId, ct);
-        var alreadyBA = await db.Set<Friendship>().AnyAsync(f => f.UserId == bId && f.FriendId == aId, ct);
+        var existingFriendships = await db.Set<Friendship>()
+            .Where(f => (f.UserId == aId && f.FriendId == bId) || (f.UserId == bId && f.FriendId == aId))
+            .Select(f => new { f.UserId, f.FriendId })
+            .ToListAsync(ct);
+
+        var alreadyAB = existingFriendships.Any(f => f.UserId == aId && f.FriendId == bId);
+        var alreadyBA = existingFriendships.Any(f => f.UserId == bId && f.FriendId == aId);
 
         if (!alreadyAB) db.Set<Friendship>().Add(Friendship.Create(aId, bId));
         if (!alreadyBA) db.Set<Friendship>().Add(Friendship.Create(bId, aId));

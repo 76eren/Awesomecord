@@ -21,9 +21,9 @@ public class GetConversations
             var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.User, cancellationToken);
             if (user == null) throw new UserNotFoundException();
 
-            var conversations = context.Conversation
+            var conversations = await context.Conversation
                 .Where(c => c.Participants.Any(p => p.UserId == request.User))
-                .ToList();
+                .ToListAsync(cancellationToken);
 
             var conversationDtos = mapper.Map<List<ConversationDto>>(conversations);
 
