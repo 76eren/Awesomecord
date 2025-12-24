@@ -94,7 +94,7 @@ export default function Navbar() {
       "
         >
             <div className="px-4 py-5 border-b border-gray-200 md:block hidden">
-                <div className="text-xl font-semibold tracking-tight">Awesomecord!</div>
+                <div className="text-xl font-semibold tracking-tight">Awesomecord</div>
                 {user != null && <div className="text-xs text-gray-500">Welcome: @{user.userHandle}</div>}
             </div>
 
