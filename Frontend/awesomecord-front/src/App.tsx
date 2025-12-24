@@ -1,20 +1,20 @@
 import "./App.css";
 import {Navigate, Route, Routes} from "react-router-dom";
-import Login from "./components/login/login.tsx";
-import Chats from "./components/chats/chats.tsx";
-import Register from "./components/register/register.tsx";
-import {GuestGuard} from "./guards/guest-guard.tsx";
-import {ProtectedGuard} from "./guards/protected-guard.tsx";
-import Notifications from "./components/notifications/notifications.tsx";
-import ServerList from "./components/serverlist/server-list.tsx";
-import Friends from "./components/friends/friends.tsx";
-import {useAuth} from "./hooks/use-auth.ts";
+import Login from "./components/Login/Login.tsx";
+import Chats from "./components/Chats/Chats.tsx";
+import Register from "./components/Register/Register.tsx";
+import {GuestGuard} from "./guards/GuestGuard.tsx";
+import {ProtectedGuard} from "./guards/ProtectedGuard.tsx";
+import Notifications from "./components/Notifications/Notifications.tsx";
+import ServerList from "./components/ServerList/ServerList.tsx";
+import Friends from "./components/Friends/Friends.tsx";
+import {useAuth} from "./hooks/useAuth.ts";
 import {useMemo} from "react";
-import {UserUpdatesListener} from "./realtime/listeners/user-updates-listener.tsx";
-import Profile from "./components/profile/profile.tsx";
+import {UserUpdatesListener} from "./realtime/listeners/UserUpdatesListener.tsx";
+import Profile from "./components/Profile/profile.tsx";
 import {SignalRRuntime} from "./realtime/signalrRuntime.tsx";
 import {API_URL} from "./schema/constants.ts";
-import {ConversationUpdateListener} from "./realtime/listeners/conversation-update-listener.tsx";
+import {ConversationUpdateListener} from "./realtime/listeners/ConversationUpdateListener.tsx";
 
 function App() {
     const {authenticated} = useAuth();

@@ -1,5 +1,5 @@
 import {useEffect} from "react";
-import {useSignalRStore} from "../store/signalr-store.ts";
+import {useSignalRStore} from "../store/signalrStore.ts";
 
 type HubConfig = { key: string; path: string };
 
