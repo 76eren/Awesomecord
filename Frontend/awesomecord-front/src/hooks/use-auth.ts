@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {isAuthenticated} from "../services/authService.ts";
+import {isAuthenticated} from "../services/auth-service.ts";
 
 
 export function useAuth() {
@@ -25,5 +25,5 @@ export function useAuth() {
         };
     }, []);
 
-    return { loading, authenticated };
+    return {loading, authenticated};
 }

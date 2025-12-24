@@ -1,11 +1,11 @@
 import * as React from "react";
 import {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import {useConversationStore} from "../../store/conversationStore.ts";
-import {useUserStore} from "../../store/userStore.ts";
-import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
-import type {ConversationModel} from "../../Models/Conversation/conversation.model.ts";
-import NewGroupChatModal from "./NewGroupChatModal.tsx";
+import {useConversationStore} from "../../store/conversation-store.ts";
+import {useUserStore} from "../../store/user-store.ts";
+import {getProfilePictureUrlByUserId} from "../../services/user-service.ts";
+import type {ConversationModel} from "../../models/conversation/conversation.model.ts";
+import NewGroupChatModal from "./new-group-chat-modal.tsx";
 
 export default function ChatNavigation() {
     const navigate = useNavigate();

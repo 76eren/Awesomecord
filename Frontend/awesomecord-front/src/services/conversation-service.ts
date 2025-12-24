@@ -1,6 +1,6 @@
 import {apiFetch} from "./http.ts";
-import type {ConversationModel} from "../Models/Conversation/conversation.model.ts";
-import type {MessageModel} from "../Models/Conversation/message.model.ts";
+import type {ConversationModel} from "../models/conversation/conversation.model.ts";
+import type {MessageModel} from "../models/conversation/message.model.ts";
 import {API_BASE_URL} from "../schema/constants.ts";
 
 export async function getConversations() {

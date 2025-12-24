@@ -1,8 +1,8 @@
-import type {ConversationModel} from "../Models/Conversation/conversation.model.ts";
-import type {LimitedUserModel} from "../Models/User/limitedUser.model.ts";
 import {create} from "zustand";
-import {getConversations} from "../services/conversationService.ts";
-import {GetMultipleUsersByIds} from "../services/userService.ts";
+import {getConversations} from "../services/conversation-service.ts";
+import {GetMultipleUsersByIds} from "../services/user-service.ts";
+import type {LimitedUserModel} from "../models/user/limited-user.model.ts";
+import type {ConversationModel} from "../models/conversation/conversation.model.ts";
 
 type conversationStore = {
     conversations: ConversationModel[];

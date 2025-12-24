@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Dialog} from "@base-ui-components/react/dialog";
 import {AlertDialog} from "@base-ui-components/react/alert-dialog";
-import {editMessage} from "../../services/messageService.ts";
+import {editMessage} from "../../services/message-service.ts";
 
 export type MessageEditDialogProps = {
     open: boolean;

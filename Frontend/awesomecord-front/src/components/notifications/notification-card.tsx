@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
-import type {LimitedUserModel} from "../../Models/User/limitedUser.model.ts";
-import {getProfilePictureUrlByUserId, getUserById} from "../../services/userService.ts";
+import type {LimitedUserModel} from "../../models/user/limited-user.model.ts";
+import {getProfilePictureUrlByUserId, getUserById} from "../../services/user-service.ts";
 
 type NotificationCardProps = {
     userId: string;

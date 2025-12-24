@@ -1,10 +1,10 @@
-import "./Login.css";
+import "./login.css";
 import * as React from "react";
 import {useState} from "react";
 import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
-import {loginUser} from "../../services/authService.ts";
+import {loginUser} from "../../services/auth-service.ts";
 import {toast} from "react-toastify";
-import type {UserLoginModel} from "../../Models/User/userLogin.model.ts";
+import type {UserLoginModel} from "../../models/user/user-login.model.ts";
 
 export default function Login() {
 

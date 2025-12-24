@@ -1,17 +1,17 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import type {MessageModel} from "../../Models/Conversation/message.model.ts";
+import type {MessageModel} from "../../models/conversation/message.model.ts";
 import {
     getConversationImages,
     getConversationMessages,
     SendMessageInConversation
-} from "../../services/conversationService.ts";
-import {useUserStore} from "../../store/userStore.ts";
-import {useConversationStore} from "../../store/conversationStore.ts";
-import {getProfilePictureUrlByUserId} from "../../services/userService.ts";
-import {useSignalRStore} from "../../store/signalrStore.ts";
-import {useAnimaleseSpriteAuto} from "../../hooks/useAnimalCrosssing.tsx";
-import {deleteMessage} from "../../services/messageService.ts";
-import MessageEditDialog from "./MessageEditDialog.tsx";
+} from "../../services/conversation-service.ts";
+import {useUserStore} from "../../store/user-store.ts";
+import {useConversationStore} from "../../store/conversation-store.ts";
+import {getProfilePictureUrlByUserId} from "../../services/user-service.ts";
+import {useSignalRStore} from "../../store/signalr-store.ts";
+import {useAnimaleseSpriteAuto} from "../../hooks/use-animalcrossing.tsx";
+import {deleteMessage} from "../../services/message-service.ts";
+import MessageEditDialog from "./message-edit-dialog.tsx";
 import {toast} from "react-toastify";
 
 type ChatWindowProps = {
@@ -412,7 +412,7 @@ export default function ChatWindow({title, conversationId}: ChatWindowProps) {
                 <div className="px-4 py-3 border-b border-gray-200 bg-white">
                     <div className="flex items-center justify-between">
                         <div>
-                            <div className="text-sm font-semibold">{title ?? "Conversation"}</div>
+                            <div className="text-sm font-semibold">{title ?? "conversation"}</div>
                             <div className="text-xs text-gray-500">{messages.length} messages</div>
                         </div>
 

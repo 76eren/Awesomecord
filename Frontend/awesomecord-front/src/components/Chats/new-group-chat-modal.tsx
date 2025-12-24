@@ -1,8 +1,8 @@
 import React, {useEffect, useMemo, useState} from "react";
-import {useUserStore} from "../../store/userStore";
-import type {LimitedUserModel} from "../../Models/User/limitedUser.model";
-import {GetMultipleUsersByIds, getProfilePictureUrlByUserId} from "../../services/userService";
-import {createConversation} from "../../services/conversationService";
+import {useUserStore} from "../../store/user-store.ts";
+import type {LimitedUserModel} from "../../models/user/limited-user.model.ts";
+import {GetMultipleUsersByIds, getProfilePictureUrlByUserId} from "../../services/user-service.ts";
+import {createConversation} from "../../services/conversation-service.ts";
 
 type NewGroupChatModalProps = {
     isOpen: boolean;

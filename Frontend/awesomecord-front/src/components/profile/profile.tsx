@@ -1,8 +1,8 @@
-import Navbar from "../Navbar/Navbar.tsx";
-import {useUserStore} from "../../store/userStore.ts";
+import Navbar from "../navbar/navbar.tsx";
+import {useUserStore} from "../../store/user-store.ts";
 import {useEffect, useState} from "react";
 import Cropper from "react-easy-crop";
-import {setProfilePicture} from "../../services/userService.ts";
+import {setProfilePicture} from "../../services/user-service.ts";
 import {toast} from "react-toastify";
 
 export default function Profile() {
@@ -95,7 +95,7 @@ export default function Profile() {
             const croppedFile = new File([croppedBlob], selectedFile.name, {type: "image/jpeg"});
 
             await setProfilePicture(croppedFile);
-            toast.success("Profile picture updated successfully!");
+            toast.success("profile picture updated successfully!");
 
         } catch (err) {
             console.error("Failed to upload profile picture:", err);

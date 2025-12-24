@@ -1,9 +1,9 @@
 import {useEffect, useState} from "react";
-import type {LimitedUserModel} from "../../Models/User/limitedUser.model.ts";
-import {getProfilePictureUrlByUserId, getUserById} from "../../services/userService.ts";
+import type {LimitedUserModel} from "../../models/user/limited-user.model.ts";
+import {getProfilePictureUrlByUserId, getUserById} from "../../services/user-service.ts";
 import {toast} from "react-toastify";
-import {deleteFriendFromFriendslist} from "../../services/friendService.ts";
-import {createConversation} from "../../services/conversationService.ts";
+import {deleteFriendFromFriendslist} from "../../services/friend-service.ts";
+import {createConversation} from "../../services/conversation-service.ts";
 
 type FriendCardProps = {
     friendId: string

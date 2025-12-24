@@ -1,5 +1,5 @@
 import {apiFetch} from "./http.ts";
-import type {LimitedUserModel} from "../Models/User/limitedUser.model.ts";
+import type {LimitedUserModel} from "../models/user/limited-user.model.ts";
 import {API_BASE_URL} from "../schema/constants.ts";
 
 export async function getUserById(id: string): Promise<LimitedUserModel> {

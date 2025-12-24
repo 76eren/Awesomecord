@@ -1,7 +1,7 @@
 import {create} from "zustand";
-import type {UserModel} from "../Models/User/user.model";
-import {me} from "../services/authService";
-import {getProfilePictureUrlByUserId} from "../services/userService.ts";
+import type {UserModel} from "../models/user/user.model";
+import {me} from "../services/auth-service.ts";
+import {getProfilePictureUrlByUserId} from "../services/user-service.ts";
 
 type UserState = {
     user: UserModel | null;

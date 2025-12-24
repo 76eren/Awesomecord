@@ -1,10 +1,10 @@
-import Navbar from "../Navbar/Navbar.tsx";
-import ChatNavigation from "./ChatNavigation.tsx";
-import {useConversationStore} from "../../store/conversationStore.ts";
-import type {ConversationModel} from "../../Models/Conversation/conversation.model.ts";
+import Navbar from "../navbar/navbar.tsx";
+import ChatNavigation from "./chat-navigation.tsx";
+import {useConversationStore} from "../../store/conversation-store.ts";
+import type {ConversationModel} from "../../models/conversation/conversation.model.ts";
 import {useEffect, useMemo} from "react";
-import ChatWindow from "./ChatWindow.tsx";
-import {useUserStore} from "../../store/userStore.ts";
+import ChatWindow from "./chat-window.tsx";
+import {useUserStore} from "../../store/user-store.ts";
 import {useParams} from "react-router-dom";
 
 export default function Chats() {

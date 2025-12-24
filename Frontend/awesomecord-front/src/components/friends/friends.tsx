@@ -1,10 +1,10 @@
 import React, {useEffect} from "react";
-import Navbar from "../Navbar/Navbar.tsx";
-import FriendCard from "./FriendCard";
-import type {CreateFriendRequestModel} from "../../Models/friend/createFriendRequest.model.ts";
-import {initiateFriendRequest} from "../../services/friendService.ts";
+import Navbar from "../navbar/navbar.tsx";
+import FriendCard from "./friend-card.tsx";
+import type {CreateFriendRequestModel} from "../../models/friend/create-friend-request.model.ts";
+import {initiateFriendRequest} from "../../services/friend-service.ts";
 import {toast} from "react-toastify";
-import {useUserStore} from "../../store/userStore.ts";
+import {useUserStore} from "../../store/user-store.ts";
 
 type Friend = {
     id: string;

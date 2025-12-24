@@ -1,10 +1,10 @@
 // This listener is meant for handling updates to conversations in real-time when the user is already on the conversations page.
 // Each time the conversations page gets loaded the conversations list is fetched again, but this is solely for updates while on the page.
 
-import {useConversationStore} from "../../store/conversationStore.ts";
-import {useSignalRStore} from "../../store/signalrStore.ts";
+import {useConversationStore} from "../../store/conversation-store.ts";
+import {useSignalRStore} from "../../store/signalr-store.ts";
 import {useEffect} from "react";
-import type {ConversationModel} from "../../Models/Conversation/conversation.model.ts";
+import type {ConversationModel} from "../../models/conversation/conversation.model.ts";
 
 export function ConversationUpdateListener() {
     const ensure = useSignalRStore((s) => s.ensure);

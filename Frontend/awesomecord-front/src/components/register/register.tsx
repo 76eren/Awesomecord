@@ -1,8 +1,8 @@
 import grapeHyacinth from "../../assets/grape-hyacinth.jpg";
 import * as React from "react";
 import {useState} from "react";
-import type {UserCreateModel} from "../../Models/User/userCreate.model.ts";
-import {registerUser} from "../../services/authService.ts";
+import type {UserCreateModel} from "../../models/user/user-create.model.ts";
+import {registerUser} from "../../services/auth-service.ts";
 import {toast} from "react-toastify";
 
 export default function Register() {

@@ -1,8 +1,8 @@
-import type {UserModel} from "../Models/User/user.model.ts";
-import type {UserCreateModel} from "../Models/User/userCreate.model.ts";
+import type {UserModel} from "../models/user/user.model.ts";
+import type {UserCreateModel} from "../models/user/user-create.model.ts";
 import {apiFetch} from "./http.ts";
-import type {UserLoginModel} from "../Models/User/userLogin.model.ts";
-import type {LimitedUserModel} from "../Models/User/limitedUser.model.ts";
+import type {UserLoginModel} from "../models/user/user-login.model.ts";
+import type {LimitedUserModel} from "../models/user/limited-user.model.ts";
 
 export async function registerUser(userCreateModel: UserCreateModel) {
     return apiFetch<LimitedUserModel>("auth", {json: userCreateModel, method: "POST", noAutoRefresh: true});

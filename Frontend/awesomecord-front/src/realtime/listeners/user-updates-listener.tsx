@@ -1,7 +1,7 @@
 import {useEffect} from "react";
-import type {UserModel} from "../../Models/User/user.model.ts";
-import {useUserStore} from "../../store/userStore.ts";
-import {useSignalRStore} from "../../store/signalrStore.ts";
+import type {UserModel} from "../../models/user/user.model.ts";
+import {useUserStore} from "../../store/user-store.ts";
+import {useSignalRStore} from "../../store/signalr-store.ts";
 
 export function UserUpdatesListener() {
     const setUser = useUserStore((s) => s.setUser);

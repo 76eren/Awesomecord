@@ -1,9 +1,9 @@
 import {useEffect, useState} from "react";
-import Navbar from "../Navbar/Navbar";
+import Navbar from "../navbar/navbar.tsx";
 import {toast} from "react-toastify";
-import {NotificationCard} from "./NotificationCard";
-import {acceptFriendRequest, cancelFriendRequest, denyFriendRequest} from "../../services/friendService.ts";
-import {useUserStore} from "../../store/userStore";
+import {NotificationCard} from "./notification-card.tsx";
+import {acceptFriendRequest, cancelFriendRequest, denyFriendRequest} from "../../services/friend-service.ts";
+import {useUserStore} from "../../store/user-store.ts";
 
 export default function Notifications() {
     const user = useUserStore((s) => s.user);
